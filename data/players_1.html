@@ -1,0 +1,1834 @@
+<html><head>
+<title>Tennis Abstract:  ATP Match Results, Splits, and Analysis</title>
+<link rel="stylesheet" href="https://www.tennisabstract.com/blue/style.css" type="text/css">
+<script type="text/javascript" src="https://www.tennisabstract.com/jquery-1.7.1-min.js"></script>
+<script type="text/javascript" src="https://www.tennisabstract.com/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="https://www.tennisabstract.com/navbar.js"></script>
+<script type="text/javascript" src="https://www.tennisabstract.com/jsmatches/leadersource.js"></script>
+
+<script language="JavaScript">
+var currentTime = new Date();
+var month = currentTime.getMonth() + 1;
+var day = currentTime.getDate();
+var year = currentTime.getFullYear().toString();
+var mm, dd;
+if (month < 10) {mm = '0' + month.toString();}
+else {mm = month.toString();}
+if (day < 10) {dd = '0' + day.toString();}
+else {dd = day.toString();}
+var today = year + mm + dd;
+var players = '1-50';
+var prefilters = {};
+var opponent="";
+var exclude="";
+
+
+var fourspaces = "    ";
+
+$.tablesorter.addParser({  
+    id: 'ranks', 
+    is: function(s) {return false;}, 
+    format: function(s) { 
+        if (s == 'UNR') {return 2000;}
+        else {return s;} 
+    },  
+    type: 'numeric'
+});
+
+$.tablesorter.addParser({  
+    id: 'reverse', 
+    is: function(s) {return false;}, 
+    format: function(s) { 
+        return pf = 100000 - parseFloat(s); 
+    },  
+    type: 'numeric'
+});
+ 
+function playeratt(pname, s, q, cc, lk) {
+    // lk = 1 or 0
+    var precede = ''
+    if (s != '') {
+        precede = '(' + s;
+        if (q != '') {
+            precede = precede + '/' + q;
+            }
+        precede = precede + ')';
+        }
+    else if (q != '') {
+        precede = '(' + q + ')';
+        }
+    //var nlink = '<a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=' + pname.replace(/ /g, '') + '">' + pname + '</a>'
+    if (cc == '') {var country = '';}
+    else {var country = ' [' + cc + ']';}
+    if (lk == 1) {return precede + nlink + country;}
+    else {return precede + pname + country;}
+    
+    };
+
+function alignRound(num, dec, perc) {
+    if (perc == 1) {
+        num = num*100;
+        }
+    var intrate = Math.round((num)*Math.pow(10, dec))/Math.pow(10, dec);
+    var extra = intrate + Math.pow(10, -1*(dec+1));
+    var strex = String(extra);
+    var indexdot = strex.indexOf('.');
+    var done;
+    if (perc == 1) {done = strex.slice(0, (indexdot+dec+1)) + '%';}
+    else {done = strex.slice(0, (indexdot+dec+1));}
+    if (done[0] == 'N' || done[0] == '%') {return '-';}
+    else if (done[0] == 'I') {return '-';} // infinity
+    else if (dec == 0) {return done.slice(0, -2) + done.slice(-1);}
+    else {return done;}
+    };
+                  
+function make(tag, attr, cont) {
+    if (arguments.length == 2 && (attr instanceof Array || typeof attr == "string")) {
+        cont = attr;
+        attributes = null;
+        }
+    var open = "<" + tag;
+    var close = "</" + tag + ">";
+    if (attr) {
+	for(var name in attr) {
+            attx = " " + name + '="' + attr[name] + '"';
+	    open = open.concat(attx);
+            }
+        }
+    open = open.concat(">");
+    if (cont instanceof Array) {
+	var content = cont.join("");
+	}
+    else {
+	var content = cont;
+	} 
+    var elem = open + content + close;
+    return elem;
+    }
+
+function sortRev(a,b) {return b - a;}
+
+url2filter = {'K': 'hand',
+              'E': 'round',
+              'I': 'rank',
+              'L': 'age',
+              'C': 'level',
+              'B': 'surface',
+              'A': 'span', 
+              'N': 'country', 
+              'D': 'tourney', 
+              'G': 'asrank',
+              'H': 'entry',
+              'J': 'oentry',
+              'M': 'height',
+              'F': 'results',
+              'P': 'sets',
+              's': 'sort',
+              'r': 'return',
+              'v': 'reverse'
+              };
+
+filter2url = {'hand': 'K',
+              'round': 'E',
+              'rank': 'I',
+              'age': 'L',
+              'level': 'C',
+              'surface': 'B',
+              'span': 'A', 
+              'country': 'N', 
+              'tourney': 'D', 
+              'asrank': 'G',
+              'entry': 'H',
+              'oentry': 'J',
+              'height': 'M',
+              'results': 'F',
+              'sets': 'P'
+              };
+
+filterlist = ['span', 'surface', 'level', 'tourney', 'round', 'results', 'sets', 'asrank', 'entry',
+              'rank', 'oentry', 'hand', 'age', 'height', 'country'];
+
+var filteropts = {'hand': ['vs Hand', 'All', 'Right', 'Left', 'One-hand BH', 'Two-hand BH'],
+                  'round': ['Round', 'All', 'Final', 'Semis', 'Quarters', 'R16', 'R32', 'R64', 'R128'],
+                  'rank': ['vs Rank', 'All', 'Top 5', 'Top 10', 'Top 20', 'Top 50', 'Top 100', '11+', '21+', '51+', '101+', 'Higher', 'Lower'], 
+                  'age': ['vs Age', 'All', 'Younger', 'Older', 'Under 21', 'Under 23', '28 & Over', '30 & Over'],
+                  'level': ['Level', 'All', 'Grand Slams', 'Masters', 'Davis Cup'], //'All ATP', 'Qualifying', 'Challengers', 'Davis Cup', 'Juniors'],
+                  'surface': ['Surface', 'All', 'Hard', 'Clay', 'Grass', 'Carpet'], // add indoor!
+                  'span': ychoices, 
+                  'country': cchoices, 
+                  'tourney': tchoices, 
+                  'asrank': rchoices,
+                  'entry': ['as Entry', 'All', 'Seeded', 'Unseeded', 'Qualifier', 'Wild Card'],
+                  'oentry': ['vs Entry', 'All', 'Seeded', 'Unseeded', 'Qualifier', 'Wild Card'],
+                  'height': ['vs Height', 'All', 'Shorter', 'Taller', "Under 5'10", "Under 6'0", "Over 6'2", "Over 6'4"],
+                  'results': ['Results', 'All', 'Wins', 'Losses', 'W by RET', 'L by RET', 'W by W/O', 'L by W/O', 'Won 1st Set', 'Lost 1st Set', 'Won Sets 1&2', 'Lost Sets 1&2', 'Split 1&2', 'Up 2-1 Sets', 'Down 1-2 Sets'],
+                  'sets': ['Sets', 'All', 'Straights', 'Deciders', 'All Best of 5', '3 Sets (of 5)', '4-Setters', '5-Setters', 'All Best of 3', '2-Setters', '3 Sets (of 3)']
+                  };
+
+var titleTips = {'DR': 'Dominance Ratio: % of return points won\ndivided by % of serve points lost.',
+                 'TPW%': 'Percentage of total points won',
+                 'RPW': 'Percentage of return points won',
+                 'vAce%': 'Ace rate against',
+                 'vDF%': 'Double fault rate against',
+                 'v1st%': '1st serve return points won',
+                 'v2nd%': '2nd serve return points won',
+                 'Ace%': 'Ace rate',
+                 'DF%': 'Double fault rate',
+                 '1stIn': 'First serve percentage',
+                 '1st%': 'First serve points won',
+                 '2nd%': 'Second serve points won',
+                 'Rk': "Player's ATP Ranking when the tournament began",
+                 'vRk': "Opponent's ATP Ranking when the tournament began",
+                 'M': 'Total matches',
+                 'M W-L': 'Match won-loss record',
+                 'M W%': 'Match winning percentage',
+                 'SPW': 'Percentage of service points won',
+                 'SPW-InP': 'Percentage of service points won\nexcluding aces and double faults',
+                 'DF/2s': 'Double faults per second serve',
+                 '2%-InP': 'Percentage of second serve points won\nexcluding double faults',
+                 'Hld%': 'Hold rate: Percentage of service games won',
+                 'Pts/SG': 'Points played per service game',
+                 'PtsL/SG': 'Points lost per service game',
+                 'RPW-InP': 'Percentage of return points won\nexcluding aces and double faults',
+                 'Brk%': 'Break rate: Percentage of return games won',
+                 'Pts/RG': 'Points played per return game',
+                 'PtsW/RG': 'Points won per return game',
+                 'BPConv%': 'Percentage of break point\nopportunities converted',
+                 'BPConv': 'Break point opportunities converted',
+                 'BPChnc': 'Break points earned',
+                 'BP/G': 'Break points earned per return game',
+                 'BP/S': 'Break points earned per set',
+                 'BP/M': 'Break points earned per match',
+                 'Bks/S': 'Return games won per set',
+                 'Bks/M': 'Return games won per match',
+                 'BPSvd%': 'Percentage of break points\nsaved on serve',
+                 'BPSaved': 'Break point opportunities saved',
+                 'BPvs': 'Break points faced on serve',
+                 'BPvs/G': 'Break points faced per service game',
+                 'BPvs/S': 'Break points faced per set',
+                 'BPvs/M': 'Break points faced per match',
+                 'Bkn/S': 'Service games lost per set',
+                 'Bkn/M': 'Service games lost per match',
+                 'MdOppRk': 'Median opponent ATP rank',
+                 'MnOppRk': 'Average (mean) opponent ATP rank',
+                 'TBs': 'Tiebreaks played',
+                 'TB W-L': 'Tiebreak won-loss record',
+                 'TB W%': 'Tiebreak winning percentage',
+                 'S W%': 'Set winning percentage',
+                 'Gms': 'Games played',
+                 'G W%': 'Game winning percentage',
+                 'Time/Mt': 'Time per match',
+                 'Min/Set': 'Minutes per set',
+                 'Sec/Pt': 'Seconds per point',
+                 'TB/S': 'Tiebreaks per set'
+                 };
+
+var hdict = {'Left': 'L',
+             'Right': 'R'
+             };
+
+var hdict2 = {'L': 'Left',
+              'R': 'Right',
+              '': 'Unknown'
+             };
+             
+var levdict = {'Grand Slams': 'G',
+               'Masters': 'M',
+               'Challengers': 'C',
+               'Qualifying': 'Q',
+               'Davis Cup': 'D',
+               'Juniors': 'J'
+               }
+
+var levdict2 = {'G': 'Grand Slams',
+               'M': 'Masters',
+               'C': 'Challengers',
+               'Q': 'Qualifying',
+               'D': 'Davis Cup',
+               'J': 'Juniors'
+               }
+
+var rddict = {'Final': 'F',
+              'Semis': 'SF',
+              'Quarters': 'QF',
+              'R16': 'R16',
+              'R32': 'R32',
+              'R64': 'R64',
+              'R128': 'R128',
+              'Other': 'RR'
+              }
+
+var rddict2 = {'F': 'Final',
+              'SF': 'Semis',
+              'QF': 'Quarters',
+              'R16': 'R16',
+              'R32': 'R32',
+              'R64': 'R64',
+              'R128': 'R128',
+              'RR': 'Other'
+              }
+
+function filterDict(fid, match, mults) {
+    if (fid == 'hand') {
+        if (hdict2[match.ohand] in mults) {return 1;}
+        else if ('One-hand BH' in mults && match.obh == '1') {return 1;}
+        else if ('Two-hand BH' in mults && match.obh == '2') {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'age') {
+        if ('Younger' in mults && (parseInt(match.obday)) > dob) {return 1;}
+        else if ('Older' in mults && (parseInt(match.obday) < dob)) {return 1;}
+        else if ('Under 21' in mults && (parseInt(match.date) - parseInt(match.obday)) < 210000) {return 1;}
+        else if ('Under 23' in mults && (parseInt(match.date) - parseInt(match.obday)) < 230000) {return 1;}
+        else if ('28 & Over' in mults && (parseInt(match.date) - parseInt(match.obday)) > 280000) {return 1;}
+        else if ('30 & Over' in mults && (parseInt(match.date) - parseInt(match.obday)) > 300000) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'rank') {
+        if (match.orank == 'UNR') {match.orank = 2000;}
+        if ('Top 5' in mults && parseInt(match.orank) < 6) {return 1;}
+        else if ('Top 10' in mults && parseInt(match.orank) < 11) {return 1;}
+        else if ('Top 20' in mults && parseInt(match.orank) < 21) {return 1;}
+        else if ('Top 50' in mults && parseInt(match.orank) < 51) {return 1;}
+        else if ('Top 100' in mults && parseInt(match.orank) < 101) {return 1;}
+        else if ('11+' in mults && parseInt(match.orank) > 10) {return 1;}
+        else if ('21+' in mults && parseInt(match.orank) > 20) {return 1;}
+        else if ('51+' in mults && parseInt(match.orank) > 50) {return 1;}
+        else if ('101+' in mults && parseInt(match.orank) > 100) {return 1;}
+        else if ('Higher' in mults && (parseInt(match.orank) < parseInt(match.rank))) {return 1;}
+        else if ('Lower' in mults && (parseInt(match.orank) > parseInt(match.rank))) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'asrank') {
+        if (match.rank == 'UNR') {match.rank = 2000;}
+        if ('Number 1' in mults&& parseInt(match.rank) <= 1) {return 1;}
+        if ('Top 5' in mults && parseInt(match.rank) <= 5) {return 1;}
+        if ('Top 10' in mults && parseInt(match.rank) <= 10) {return 1;}
+        else if ('Top 20' in mults && parseInt(match.rank) <= 20) {return 1;}
+        else if ('Top 50' in mults && parseInt(match.rank) <= 50) {return 1;}
+        else if ('Top 100' in mults && parseInt(match.rank) <= 100) {return 1;}
+        else if ('Top 200' in mults && parseInt(match.rank) <= 200) {return 1;}
+        else if ('2+' in mults && parseInt(match.rank) >= 2) {return 1;}
+        else if ('6+' in mults && parseInt(match.rank) >= 6) {return 1;}
+        else if ('11+' in mults && parseInt(match.rank) >= 11) {return 1;}
+        else if ('21+' in mults && parseInt(match.rank) >= 21) {return 1;}
+        else if ('51+' in mults && parseInt(match.rank) >= 51) {return 1;}
+        else if ('101+' in mults && parseInt(match.rank) >= 101) {return 1;}
+        else if ('201+' in mults && parseInt(match.rank) >= 201) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'level') {
+        if ('All ATP' in mults) {
+            if (match.level == 'Q' || match.level == 'C') {}
+            else if (match.level == 'J') {}
+            else {return 1;} 
+            }
+        if (levdict2[match.level] in mults) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'round') {
+        if (rddict2[match.round] in mults) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'span') {
+        if ('Career' in mults) {return 1;}
+        else if ('Last 52' in mults) {
+            var keyday = today;
+            if (parseInt(match.date) < (keyday-10000)) {}
+            //else if (parseInt(match.date) > keyday) {}
+            else {return 1;}
+            }
+        var yr = match.date.slice(0,4);
+        var mmdd = match.date.slice(4);
+        var syr;
+        if (parseInt(mmdd) > 1226) {
+            syr = (parseInt(yr) + 1) + '';
+            }
+        else {syr = yr;}
+        if (syr in mults) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'entry') {  // -1 because entry can be '' for seeds
+        if ('Qualifier' in mults && (match.entry == 'Q' || match.entry == 'LL')) {return 1;}
+        else if ('Wild Card' in mults && match.entry == 'WC') {return 1;}
+        else if ('Seeded' in mults && match.seed.length > 0) {return 1;}
+        else if ('Unseeded' in mults && match.seed.length == 0) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'oentry') {  // -1 because entry can be '' for seeds
+        if ('Qualifier' in mults && (match.oentry == 'Q' || match.oentry == 'LL')) {return 1;}
+        else if ('Wild Card' in mults && match.oentry == 'WC') {return 1;}
+        else if ('Seeded' in mults && match.oseed.length > 0) {return 1;}
+        else if ('Unseeded' in mults && match.oseed.length == 0) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'height') {  
+        if ('Shorter' in mults && parseInt(match.oht) < ht) {return 1;}
+        else if ('Taller' in mults && parseInt(match.oht) > ht) {return 1;}
+        else if ("Under 5'10" in mults && parseInt(match.oht) < 178) {return 1;}
+        else if ("Under 6'0" in mults && parseInt(match.oht) < 183) {return 1;}
+        else if ("Over 6'2" in mults && parseInt(match.oht) > 188) {return 1;}
+        else if ("Over 6'4" in mults && parseInt(match.oht) > 193) {return 1;}
+        else {return 0;}
+        }
+    else if (fid == 'sets') {
+        if (match.score == '') {return 0;}
+        if (match.score == 'W/O') {return 0;}
+        if ('All Best of 3' in mults && (parseInt(match.max) == 3)) {return 1;}
+        else if ('All Best of 5' in mults && (parseInt(match.max) == 5)) {return 1;}
+        if ('Straights' in mults || 'Deciders' in mults) {
+            //if (match.score == 'W/O') {return 0;} // only because later filters could not possibly include this
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if ('Straights' in mults && (match.max/nsets >= 1.4)) {return 1;}
+            else if ('Deciders' in mults && (parseInt(match.max) == nsets)) {return 1;}
+            }
+        if ('5-Setters' in mults && (parseInt(match.max) == 5)) {
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if (nsets == 5) {return 1;}
+            }
+        if ('4-Setters' in mults && (parseInt(match.max) == 5)) {
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if (nsets == 4) {return 1;}
+            }
+        if ('3 Sets (of 5)' in mults && (parseInt(match.max) == 5)) {
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if (nsets == 3) {return 1;}
+            }
+        if ('3 Sets (of 3)' in mults && (parseInt(match.max) == 3)) {
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if (nsets == 3) {return 1;}
+            }
+        if ('2-Setters' in mults && (parseInt(match.max) == 3)) {
+            var sets = match.score.split(' ');
+            var nsets = sets.length;
+            if (sets[(sets.length-1)] == 'RET') {nsets = nsets - 1;}
+            if (nsets == 2) {return 1;}
+            }
+        }
+    else if (fid == 'results') {
+        if (match.score == '') {return 0;}
+        if (match.score == 'W/O') {
+            if ('W by W/O' in mults && match.wl == 'W') {return 1;}
+            else if ('L by W/O' in mults && match.wl == 'L') {return 1;}
+            else {return 0;}
+            } // only because later filters could not possibly include this
+        else if (match.score.slice(-3) == 'RET') {
+            if ('W by RET' in mults && match.wl == 'W') {return 1;}
+            else if ('L by RET' in mults && match.wl == 'L') {return 1;}
+            else {return 0;}
+            }        
+        if ('Wins' in mults && match.wl == 'W') {return 1;}
+        else if ('Losses' in mults && match.wl == 'L') {return 1;}
+        var sets = match.score.split(' ');
+        if (sets[1] == 'RET') {return 0;} // only because this is the last filter
+        var firstset = sets[0];
+        var a = parseInt(firstset[0]), b = parseInt(firstset[2]);
+        var wonfirst;
+        if (match.wl == 'W') {
+            if (a>b) {wonfirst=1;}
+            else {wonfirst=0;}
+            }
+        else {
+            if (a>b) {wonfirst=0;}
+            else {wonfirst=1;}
+            }
+        if ('Won 1st Set' in mults && wonfirst == 1) {return 1;}
+        else if ('Lost 1st Set' in mults && wonfirst == 0) {return 1;}
+        if (sets.length < 3) {return 0;} // limit to five-setters
+        else if (sets[2] == 'RET') {return 0;} // only because this is the last filter
+        var secondset = sets[1];
+        var a = parseInt(secondset[0]), b = parseInt(secondset[2]);
+        var wonsecond;
+        if (match.wl == 'W') {
+            if (a>b) {wonsecond=1;}
+            else {wonsecond=0;}
+            }
+        else {
+            if (a>b) {wonsecond=0;}
+            else {wonsecond=1;}
+            }
+        if ('Won Sets 1&2' in mults && (wonfirst == 1 && wonsecond == 1)) {return 1;}
+        else if ('Lost Sets 1&2' in mults && (wonsecond == 0 && wonfirst == 0)) {return 1;}
+        else if ('Split 1&2' in mults && (wonfirst != wonsecond)) {return 1;}
+        if (sets.length < 4) {return 0;} // limit to four-plus setters
+        else if (sets[3] == 'RET') {return 0;} // only because this is the last filter
+        var thirdset = sets[2];
+        var a = parseInt(thirdset[0]), b = parseInt(thirdset[2]);
+        var wonthird;
+        if (match.wl == 'W') {
+            if (a>b) {wonthird=1;}
+            else {wonthird=0;}
+            }
+        else {
+            if (a>b) {wonthird=0;}
+            else {wonthird=1;}
+            }
+        var setswon = wonfirst+wonsecond+wonthird
+        if ('Up 2-1 Sets' in mults && setswon == 2) {return 1;}
+        else if ('Down 1-2 Sets' in mults && setswon == 1) {return 1;}        
+        return 0;
+        }
+    else if (fid == 'tourney') {
+        if ('Tour Finals' in mults) {
+            if (match.tourn == 'Tour Finals' || match.tourn == 'Masters Cup') {return 1;}
+            }
+        else if ('Olympics' in mults) {
+            if (match.tourn.indexOf('Olympics') != -1) {return 1;}
+            }
+        else if ('Davis Cup' in mults) {
+            if (match.tourn.indexOf('Davis Cup') != -1) {return 1;}
+            }
+        else if (match.tourn.slice(-2) == ' Q') {
+            if (match.tourn.slice(0,-2) in mults) {return 1;}
+            }
+        if (match.tourn in mults) {return 1;}
+        return 0;
+        }
+    else if (fid == 'country') {
+        if (match.ocountry in mults) {return 1;}
+        return 0;
+        }
+    else if (fid == 'surface') {
+        if (match.surf in mults) {return 1;}
+        return 0;
+        }
+    else if (fid == 'h2h') {
+        if (match.opp in mults) {return 1;}
+        return 0;
+        }
+    else if (fid == 'not') {
+        if (match.opp in mults) {return 0;}
+        return 1;
+        }
+    }
+
+function genfilter(fid, first, match, att) {
+    // fid = filter id; first = default select; match = relevant match object; att = rel attribute
+    // find e.g. 'surfaceselected' text -- that's it
+    var selname = '.' + fid + 'selected';
+    var multselect = $(selname).text().split(fourspaces + fourspaces).slice(1); // list of selected for this filte
+    if (multselect[0] == undefined) { // ugly IE hack
+    	var multselect = $(selname).text().split("        ").slice(1);
+    	}
+    var mults = {};
+    for (var i=0; i<multselect.length; i++) {mults[multselect[i].replace(/ /g, ' ')] = 1;}  // make list into object, for 'in' searching
+    if ('All' in mults) {return 1;}
+    else if (filterDict(fid, match, mults) != 1) {return 0;} // this is where it gets messy
+    return 1;
+    }
+
+function hidePermalink() {
+    if ($(".perma").text() == 'Hide Permalink') { // generalize this, also add to other toggles that change permalink?
+        $(".perma").html('Table Permalink');
+        $("#permalink").remove();
+        }
+    }
+
+function applyPrefilters() {
+    if (prefilters.length != 0) {
+        for (j=0; j<filterlist.length; j++) {
+            var filter = filterlist[j];
+            if (filter in prefilters) {
+                $("." + filter + "choice").removeClass("selected").removeClass(filter + "selected");
+                if (filter in alphaFilters) {
+                    var applylist = prefilters[filter].split(',');
+                    }
+                else {
+                    var applylist = prefilters[filter].split('i');
+                    }
+                for (k=0; k<applylist.length; k++) {                
+                    $("#" + filter + applylist[k]).addClass("selected").addClass(filter + "selected");
+                    if ($("#" + filter + "head").hasClass('closed')) {$("#" + filter + "head").addClass("selected");}
+                    }
+                }
+            }
+        }
+    if (opponent.length != 0) {
+        var opps = opponent.split(',');
+        for (i=0; i<opps.length; i++) {
+            var player = insertNameSpaces(opps[i]);
+            setPlayerFilter(player, 0);
+            }
+        for (i=0; i<opps.length; i++) {
+            var playerid = '#h2h' + opps[i];
+            $(playerid).addClass('selected').addClass('h2hselected');
+            }
+        $("#h2hhead").addClass("selected");
+        }
+    else {
+        $(".h2hchoice").removeClass("selected").removeClass("h2hselected");
+        $("#h2hdef").addClass("selected").addClass("h2hselected");
+        $(".h2hchoice").toggle();
+        }
+    if (exclude.length != 0) {
+        var nots = exclude.split(',');
+        for (i=0; i<nots.length; i++) {
+            var player = insertNameSpaces(nots[i]);
+            setNotPlayerFilter(player, 0);
+            }
+        for (i=0; i<nots.length; i++) {
+            var playerid = '#not' + nots[i];
+            $(playerid).addClass('selected').addClass('notselected');
+            }
+        $("#nothead").addClass("selected");
+        }
+    else {
+        $(".notchoice").removeClass("selected").removeClass("notselected");
+        $("#notdef").addClass("selected").addClass("notselected");
+        $(".notchoice").toggle();
+        }
+    }
+
+var spelled = {'A': '', 'D': '', 'N': ''};
+function newPrefilters(filterstring) {
+    // also need to handle h2h opps, multiple args like q= and x=, for popstate?
+    var io = filterstring.indexOf('&q=');
+    if (io == -1) {opponent = '';}
+    else {
+        opponent = filterstring.slice(io+3);
+        filterstring = filterstring.slice(0, io);
+        }
+    var xo = filterstring.indexOf('&x=');
+    if (xo == -1) {exclude = '';}
+    else {
+        exclude = filterstring.slice(xo+3);
+        filterstring = filterstring.slice(0, xo);
+        }
+    prefilters = {};
+    filterstring += 'Z';
+    var start = 0;
+    if (filterstring[0] in spelled) {var go = 0;}
+    else {var go = 1;}
+    for (c=1; c<filterstring.length; c++) {
+        if (filterstring[c] == 'q' && filterstring[c-1] == 'q') {
+            if ((c+1)<filterstring.length && filterstring[c+1] == ',') {}
+            else {go = 1;}
+            }
+        else if (filterstring[c] in {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1, 'i': 1, ',': 1} && go == 1) {}
+        else if (go == 1) {
+            var chunk = filterstring.slice(start, c);
+            var k = url2filter[chunk[0]];
+            var v = chunk.slice(1);
+            prefilters[k] = v;
+            start = c;
+            if (filterstring[0] in spelled) {go = 0;}
+            }
+        }
+    //alert(opponent);
+    resetFilters();
+    applyPrefilters();
+    makeMatchTable();
+    }
+
+function getFilterParams() {
+    var params = '';
+    for (j=0; j<filterlist.length; j++) {
+        var filter = filterlist[j];
+        if (filter in alphaFilters) {var splitter = ',';}
+        else {var splitter = 'i';}
+        var fselected = '.' + filter + 'selected', fdef = filter + 'def';
+        var fkey = filter2url[filter]; // e.g. 'span' = 'A'
+        var selnum = '';
+        if ($(fselected).attr('id') != fdef) {
+            $(fselected).each(function (i) {
+                var selid = $(this).attr('id'), selname = selid.slice(filter.length);
+                if (selnum.length == 0) {
+                    selnum = selname;
+                    }
+                else {
+                    selnum = selnum + splitter + selname;
+                    }
+                });
+            params = params + fkey + selnum;
+            }
+        }
+    return params;
+    }
+
+function getPermalinkParams() {
+    startwith = getFilterParams();
+    var skey, sdown;
+    if ($('#matchheader').children(".headerSortDown").length == 0) {
+        skey = $('#matchheader').children(".headerSortUp")[0].cellIndex;
+        sdown = '1';
+        }
+    else {
+        skey = $('#matchheader').children(".headerSortDown")[0].cellIndex;
+        sdown = '0';
+        }
+    if (skey == '0' && sdown == '1') {}
+    else {startwith = startwith + 's' + skey + sdown;}
+    if (!$(".statso").hasClass('likelink')) {startwith += 'o1';}
+    else if (!$(".statsw").hasClass('likelink')) {startwith += 'w1';}
+    else if (!$(".statsl").hasClass('likelink')) {startwith += 'l1';}
+    else if (!$(".statst").hasClass('likelink')) {startwith += 't1';}
+    // insert opponents, separated by commas, into url
+    if ($('#h2hdef').hasClass('selected')) {}
+    else {
+        var oppstring = '';
+        var opps = $('.h2hselected').text().split(fourspaces + fourspaces).slice(1);
+        for (var i=0; i<opps.length; i++) {
+            //oppstring = oppstring + opps[i].replace(' ', '') + ',';
+            oppstring = oppstring + opps[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
+            }
+        startwith = startwith + '&q=' + oppstring.slice(0,-1);
+        }
+    // insert excludes, separated by commas, into url
+    if ($('#notdef').hasClass('selected')) {}
+    else {
+        var notstring = '';
+        var nots = $('.notselected').text().split(fourspaces + fourspaces).slice(1);
+        for (var i=0; i<nots.length; i++) {
+            //notstring = notstring + nots[i].replace(' ', '') + ',';
+            notstring = notstring + nots[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
+            }
+        startwith = startwith + '&x=' + notstring.slice(0,-1);
+        }
+    return startwith;
+    }
+
+function insertNameSpaces(opponent) {
+    var oppname = opponent[0];
+    for (var c=1; c<opponent.length; c++) {
+        if (opponent[c] == opponent[c].toUpperCase()) {
+            oppname = oppname + ' ' + opponent[c];
+            }
+        else {oppname += opponent[c];}
+        }
+    return oppname;
+    }
+
+function resetFilters() {
+    $(".inmenu").removeClass("selected");
+    $(".menudefault").addClass("selected");
+    $(".header").removeClass("selected");
+    for (i=0; i<filterlist.length; i++) {
+        var fname = filterlist[i];
+        var fchoice = '.' + fname + 'selected', fdef = '#' + fname + 'def';
+        $(fchoice).removeClass(fchoice.slice(1));
+        $(fdef).addClass(fchoice.slice(1));
+        }
+    }
+    
+var matchhead = ["date","tourn","surf","level","wl","player",
+              "rank","seed","entry","round",
+              "score","max","opp","orank","oseed","oentry","ohand","obh",
+              "obday", "oht","ocountry","oactive",
+              "tbw", "tbl","setw","setl",
+              "time","aces","dfs","pts","firsts","fwon",
+              "swon",'games',"saved","chances","oaces","odfs","opts","ofirsts",
+              "ofwon","oswon",'ogames',"osaved","ochances"]
+    
+var hdrsServe = ['Date', 'Tournament', 'Surface', 'Rd', 'Rk', 'vRk', '', 'Score', 'DR', 'A%', 'DF%', '1stIn', '1st%', '2nd%', 'BPSaved', 'Time'];
+var hdrsReturn = ['Date', 'Tournament', 'Surface', 'Rd', 'Rk', 'vRk', '', 'Score', 'DR', 'TPW', 'RPW', 'vA%', 'v1st%', 'v2nd%', 'BPConv', 'Time'];
+var hdrSrv = ['Rk', 'Player', 'M', 'M W-L', 'M W%', 'SPW', 'SPW-InP', 'Aces', 'Ace%', 'DFs', 'DF%', 
+              'DF/2s', '1stIn', '1st%', '2nd%', '2%-InP', 'Hld%', 'Pts/SG', 'PtsL/SG'];
+var hdrRet = ['Rk', 'Player', 'M', 'RPW', 'RPW-InP', 'vAce%', 'vDF%', 'v1st%', 'v2nd%', 
+              'Brk%', 'Pts/RG', 'PtsW/RG', 'MdOppRk', 'MnOppRk'];
+var hdrBrk = ['Rk', 'Player', 'M', 'BPConv%', 'BPConv', 'BPChnc', 'BP/G', 'BP/S', 'BP/M', 'Bks/S', 'Bks/M',  
+              'BPSvd%', 'BPSaved', 'BPvs', 'BPvs/G', 'BPvs/S', 'BPvs/M', 'Bkn/S', 'Bkn/M'];
+var hdrOth = ['Rk', 'Player', 'M', 'DR', 'Points', 'TPW%', 'TBs', 'TB W-L', 'TB W%', 'TB/S', 'Sets', 'Set W-L', 'S W%', 
+              'Gms', 'Game W-L', 'G W%', 'Time/Mt', 'Min/Set', 'Sec/Pt'];                                                 
+	    	 
+function makeMatchTable(options) {
+    var servestats, stdscores;
+    var rows = [], chunks = [];
+    var stx = $.trim($(".spanselected").text());
+    // checking to see whether we need to add more matches
+    
+    /*
+    if ((matchmx.length <= shortlist && stx != 'Last 52') && (stx != '2011' && stx != '2012')) {
+        if (careerjs == 1) {matchmx = matchmx.concat(morematchmx);}   // some way to force this to load, even if waiting
+        };
+        */
+        
+    if ('overall' in prefilters) {
+        $(".stattab").addClass('likelink');
+        $(".statso").removeClass('likelink');
+        delete prefilters['overall'];
+        }
+    else if ('winner' in prefilters) {
+        $(".stattab").addClass('likelink');
+        $(".statsw").removeClass('likelink');
+        delete prefilters['winner'];
+        }
+    else if ('loser' in prefilters) {
+        $(".stattab").addClass('likelink');
+        $(".statsl").removeClass('likelink');
+        delete prefilters['loser'];
+        }
+    else if ('total' in prefilters) {
+        $(".stattab").addClass('likelink');
+        $(".statst").removeClass('likelink');
+        delete prefilters['total'];
+        }
+        
+    var showstats = ''
+    if (!$(".statso").hasClass('likelink')) {showstats = 'o';}
+    else if (!$(".statsw").hasClass('likelink')) {showstats = 'w';}
+    else if (!$(".statsl").hasClass('likelink')) {showstats = 'l';}
+    else if (!$(".statst").hasClass('likelink')) {showstats = 't';}
+    hidePermalink();   
+    var hdrs; 
+
+    var hdrs; 
+    if (showstats == 'o') {hdrs = hdrSrv;}
+    else if (showstats == 'w') {hdrs = hdrRet;}
+    else if (showstats == 'l') {hdrs = hdrBrk;}
+    else if (showstats == 't') {hdrs = hdrOth;}
+    
+    //var currentfilter = $.extend(true, {}, totals);
+    // decide now on table sorting
+    var slist = [[0,0]];
+    if ($(".headerSortDown").length > 0 || $(".headerSortUp").length > 0) {  // not the first rendering of the table; keep previous sort
+        var skey, sdown;
+        if ($('#matchheader').children(".headerSortDown").length == 0) {
+            skey = $('#matchheader').children(".headerSortUp")[0].cellIndex;
+            sdown = '1';
+            }
+        else {
+            skey = $('#matchheader').children(".headerSortDown")[0].cellIndex;
+            sdown = '0';
+            }
+        if (skey == '0' && sdown == '1') {}
+        else {slist = [[skey, sdown]];}
+        }
+    else if ('sort' in prefilters) { // first rendering, use sort params from url
+        var col, down;
+        col = parseInt(prefilters['sort'].slice(0, -1));
+        down = parseInt(prefilters['sort'].slice(-1));
+        if (col == 0 && down == 1) {slist = [[0,1], [3,1]];}
+        else if (col == 6 || col == 7) {slist = [[0,1], [3,1]];} // unsortable columns ... eh
+        else {slist = [[col, down]];}
+        }
+    else {} // first rendering, no specified sort params
+    var $matchtable = $('<table>');
+    var $mthead = $('<thead>');
+    var $mtheaderrow = $('<tr>').attr('id', 'matchheader'); 
+    var $mtfoot = $('<tfoot>');
+    var $mtfooterrow = $('<tr>').attr('id', 'matchfooter').attr('background-color', '#FFF'); // color weirdness?  
+    var $mtbody = $('<tbody>');
+    // header row
+    var cells = [];
+    for (var i = 0; i < hdrs.length; i++) {
+        //var $mthcell = $('<th>');
+        var $mthspan = $('<span>').text(hdrs[i]);
+        if (hdrs[i] in titleTips) {$mthspan.attr('title', titleTips[hdrs[i]]);}
+        var $mthcell = $('<th>').append($mthspan);
+        if (i > 1) {$mthcell.attr('align', 'right');}
+        $mtheaderrow.append($mthcell);
+        }
+    $mthead.append($mtheaderrow);
+    $matchtable.append($mthead);
+    var pstats = {};
+    for (var s = 0; s < matchmx.length; s++) {             
+        var match = {}
+        for (var x=0; x<matchmx[s].length; x++) {
+            match[matchhead[x]] = matchmx[s][x];
+            }
+        if (genfilter('h2h', 'Head-to-Head', match, match.opp) != 1) {continue;}
+        if (genfilter('not', 'Exclude Opp', match, match.opp) != 1) {continue;} 
+        if (genfilter('span', 'Last 52', match, match.date) != 1) {continue;}  
+        if (genfilter('hand', 'vs Hand', match, match.ohand) != 1) {continue;}
+        if (genfilter('country', 'vs Country', match, match.ocountry) != 1) {continue;}
+        if (genfilter('age', 'vs Age', match, match.obday) != 1) {continue;}
+        if (genfilter('rank', 'vs Rank', match, match.orank) != 1) {continue;}
+        if (genfilter('asrank', 'as Rank', match, match.rank) != 1) {continue;}
+        if (genfilter('level', 'Level', match, match.level) != 1) {continue;}
+        if (genfilter('round', 'Round', match, match.round) != 1) {continue;}
+        if (genfilter('surface', 'Surface', match, match.surf) != 1) {continue;} 
+        if (genfilter('tourney', 'Event', match, match.tourn) != 1) {continue;} 
+        if (genfilter('entry', 'Entry', match, match.entry) != 1) {continue;} 
+        if (genfilter('oentry', 'vs Entry', match, match.oentry) != 1) {continue;} 
+        if (genfilter('height', 'vs Height', match, match.oht) != 1) {continue;}
+        if (genfilter('results', 'All', match, match.wl) != 1) {continue;}
+        if (genfilter('sets', 'All', match, match.max) != 1) {continue;}  
+   
+	if (match.player in pstats) {}
+	else {
+	    pstats[match.player] = {'W': 0, 'L': 0, 'oranks': []};
+	    for (var y=22; y<matchhead.length; y++) {
+	        pstats[match.player][matchhead[y]] = 0;
+	        }
+	    }
+	if (match.score == 'W/O' || match.score == 'RET') {}
+	else if (match.wl == 'W') {pstats[match.player]['W'] += 1;}
+	else if (match.wl == 'L') {pstats[match.player]['L'] += 1;}
+	else {} // how to deal with W/Os for win, loss totals?
+	if (isNaN(parseInt(match.orank))) {}
+	else {pstats[match.player]['oranks'].push(match.orank);}
+        for (var z=22; z<matchhead.length; z++) {
+            var statname = matchhead[z];
+            if (isNaN(parseInt(match[statname]))) {}
+            else {pstats[match.player][statname] += parseInt(match[statname]);}
+            }
+        }
+    // put 'avg' in dict, sum all counting stats; deal separately with oranks?
+    pstats['avg'] = {'oranks': []};
+    var statlist = matchhead.slice(22).concat(['W', 'L']);
+    for (var j=0; j<statlist.length; j++) {
+        for (p in pstats) {
+            if (p == 'avg') {continue;}
+            if (!(statlist[j] in pstats['avg'])) {pstats['avg'][statlist[j]] = 0;}
+            pstats['avg'][statlist[j]] += pstats[p][statlist[j]];
+            }
+        }
+    for (p in pstats) {
+        if (p == 'avg') {continue;}
+        pstats['avg']['oranks'] = pstats['avg']['oranks'].concat(pstats[p]['oranks']);
+        }
+    //var currentParams = getFilterParams();
+    if ($('#matchheader').length == 0) {
+        var urlparams = getFilterParams();
+        //var urlparams = '';
+        }
+    else {
+        var urlparams = getPermalinkParams().slice(0,-5);
+        if (urlparams[-1] == 's') {urlparams = urlparams.slice(0,-1);}
+        }
+    for (p in pstats) {
+        var nmatches = pstats[p].W + pstats[p].L;
+        if (p == 'avg') {}
+        else {
+            var prank = crank[p]; // will need to handle errors
+            var $mtrow = $('<tr>'); 
+            $mtrow.append($('<td>').text(prank));
+            // player cell -- name/link, country code
+            var nlink = 'http://www.tennisabstract.com/cgi-bin/player.cgi?p=' + p.replace(/ /g, '') // opp link
+            var $olk = $('<a>').text(p).attr('href', nlink);
+            $opplink = $('<span>'), $oppcc = $('<span>');
+            $opplink.append($olk);
+            var countrycode = pccs[p]; 
+            $oppcc.text(' [' + countrycode + ']');
+            $matchcell = $('<td>').append($opplink).append($oppcc);
+            $mtrow.append($matchcell);
+            var playerurl = 'http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=' + p.replace(/ /g, '') + '&f=' + urlparams;
+            var $mlk = $('<a>').text(nmatches).attr('href', playerurl);
+            $mlinkspan = $('<span>').append($mlk);
+            $mtrow.append($('<td>').append($mlinkspan).attr('align', 'right'));
+            } 
+        // keep these handy: total matches, points, sets, games, serve games, return games
+        var npoints = parseInt(pstats[p].pts) + parseInt(pstats[p].opts);
+        var nsets = parseInt(pstats[p].setw) + parseInt(pstats[p].setl);
+        var sgames = parseInt(pstats[p].games);
+        var rgames = parseInt(pstats[p].ogames);
+        var ngames = sgames+rgames
+        var bplost = pstats[p].chances - pstats[p].saved;
+        var holds = sgames - bplost;
+        var bpconv = pstats[p].ochances - pstats[p].osaved;
+	
+        // pstats[p] total, record, wp
+        if (showstats == 'o') {
+            var matchrecord = pstats[p].W + '-' + pstats[p].L;
+            var matchwp = alignRound(pstats[p].W/nmatches, 1, 1);
+            // standard serve stats
+            var acerate = alignRound((pstats[p].aces/pstats[p].pts), 1, 1);
+            var dfrate = alignRound((pstats[p].dfs/pstats[p].pts), 1, 1);
+            var secondserves = (pstats[p].pts-pstats[p].firsts)
+            var defSeconds = alignRound((pstats[p].dfs/secondserves), 1, 1);
+            var firstin = alignRound((pstats[p].firsts/pstats[p].pts), 1, 1);
+            var fwin = alignRound((pstats[p].fwon/pstats[p].firsts), 1, 1);
+            var swin = alignRound((pstats[p].swon/secondserves), 1, 1);
+            var swinIn = alignRound((pstats[p].swon/(secondserves-pstats[p].dfs)), 1, 1);
+            var servepointswonraw = parseInt(pstats[p].fwon) + parseInt(pstats[p].swon)
+            var spw = alignRound((servepointswonraw/pstats[p].pts), 1, 1);
+            var spwInplay = alignRound((servepointswonraw - pstats[p].aces)/(pstats[p].pts - pstats[p].aces - pstats[p].dfs), 1, 1);
+            var holdPerc = alignRound((holds/sgames), 1, 1); 
+            var pointsPerService = alignRound((pstats[p].pts/sgames), 1, 0);
+	    var pointsLostPerService = alignRound(((pstats[p].pts-pstats[p].fwon-pstats[p].swon)/sgames), 1, 0); 
+	    var rawaces = pstats[p].aces;
+            var rawdoubles = pstats[p].dfs;
+	    }
+	else if (showstats == 'w') {    
+            // standard return stats
+            var vservepointswonraw = parseInt(pstats[p].ofwon) + parseInt(pstats[p].oswon)
+            var rpw = alignRound(1 - ((vservepointswonraw)/pstats[p].opts), 1, 1);
+            var rpwInplay = alignRound(1 - ((vservepointswonraw - pstats[p].oaces)/(pstats[p].opts - pstats[p].oaces - pstats[p].odfs)), 1, 1);
+            var vace = alignRound((pstats[p].oaces/pstats[p].opts), 1, 1);
+            var vdef = alignRound((pstats[p].odfs/pstats[p].opts), 1, 1);
+            var r1pw = alignRound(1 - (pstats[p].ofwon/pstats[p].ofirsts), 1, 1);
+            var r2pw = alignRound(1 - (pstats[p].oswon/(pstats[p].opts-pstats[p].ofirsts)), 1, 1);
+	    var breakPerc = alignRound((bpconv/rgames), 1, 1);
+	    var pointsPerReturn = alignRound((pstats[p].opts/rgames), 1, 0);
+	    var pointsWonPerReturn = alignRound(((pstats[p].opts-pstats[p].ofwon-pstats[p].oswon)/rgames), 1, 0);
+            // median opp rank -- might need to skip for 2 or fewer matches
+            var oppranks = pstats[p].oranks;
+            oppranks.sort(function(a,b){return a-b});
+            var halfx = oppranks.length/2;
+            if (oppranks.length % 2 == 0) {var medopp = alignRound((parseInt(oppranks[halfx]) + parseInt(oppranks[halfx-1]))/2, 1, 0);}
+            else {var medopp = alignRound(oppranks[halfx-0.5], 1, 0);}
+            // mean opp rank
+            var totalrank = 0;
+            for (var i=0; i<oppranks.length; i++) {
+                totalrank += parseInt(oppranks[i]);
+                }
+            var mnopp = alignRound(totalrank/oppranks.length, 1, 0);	    
+	    }
+	else if (showstats == 'l') {
+	    var bksavedRate = alignRound((pstats[p].saved/pstats[p].chances), 1, 1) // + ' (' + pstats[p].saved + '/' + pstats[p].chances + ')';
+	    var bkconvRate = alignRound(1 - (pstats[p].osaved/pstats[p].ochances), 1, 1);
+            // fun with breakpoints -- saved/lost
+            var bpagainst = pstats[p].chances;
+            var bpsaved = pstats[p].saved;
+            
+            var bpvsPerGame = alignRound((bpagainst/sgames), 2, 0);
+            var bpvsPerSet = alignRound((bpagainst/nsets), 1, 0);
+            var bpvsPerMatch = alignRound((bpagainst/nmatches), 1, 0);
+            // fun with breakpoint oppos
+            var bpchances = pstats[p].ochances;
+            var bpfailed = pstats[p].osaved;
+            
+            var bpPerGame = alignRound((bpchances/rgames), 2, 0);
+            var bpPerSet = alignRound((bpchances/nsets), 1, 0);
+            var bpPerMatch = alignRound((bpchances/nmatches), 1, 0);
+	    // more assorted rates
+	    var breaksPerSet = alignRound((bpconv/nsets), 2, 0);
+	    var brokenPerSet = alignRound(((sgames-holds)/nsets), 2, 0);
+	    var breaksPerMatch = alignRound((bpconv/nmatches), 1, 0);
+	    var brokenPerMatch = alignRound(((sgames-holds)/nmatches), 1, 0); 
+	    }
+	else if (showstats == 't') {
+	    var pointswon = parseInt(pstats[p].fwon) + parseInt(pstats[p].swon) + (pstats[p].opts - pstats[p].ofwon - pstats[p].oswon);
+	    var tpw = alignRound((pointswon/(npoints)), 1, 1);
+            // tb total, record, wp
+            var nbreakers = pstats[p].tbw + pstats[p].tbl;
+            var breakerrecord = pstats[p].tbw + '-' + pstats[p].tbl;
+            var breakerwp = alignRound(pstats[p].tbw/nbreakers, 1, 1);
+            var tbrate = alignRound(nbreakers/nsets, 1, 1);
+            // sets record, wp
+            var setrecord = pstats[p].setw + '-' + pstats[p].setl;
+            var setwp = alignRound(pstats[p].setw/nsets, 1, 1);
+            // dr
+            var rpw = 1 - (parseInt(pstats[p].ofwon) + parseInt(pstats[p].oswon))/pstats[p].opts;
+            var spl = 1 - ((parseInt(pstats[p].fwon) + parseInt(pstats[p].swon))/pstats[p].pts);
+            var num = rpw/spl, dec = 2;
+            var domratio = alignRound(rpw/spl, dec);
+            // fun with time
+            var minutesPerMatch = parseInt(pstats[p].time)/nmatches;
+            var hours = parseInt(minutesPerMatch/60);
+            var minutes = Math.round(minutesPerMatch % 60);
+            if (minutes < 10) {minutes = '0' + minutes;}
+            var timePerMatch = hours + ':' + minutes;
+            var minutesPerSet = alignRound((parseInt(pstats[p].time)/nsets), 1, 0);
+            var secondsPerPoint = alignRound(((parseInt(pstats[p].time)*60)/npoints), 1, 0);
+            var gameswon = holds+bpconv;
+            var gameslost = ngames - gameswon;
+            var gamesrecord = gameswon + '-' + gameslost;
+            var gameswp = alignRound((gameswon/ngames), 1, 1);
+            }
+	var sortdesc = {};
+	if (showstats == 'o') { // serve/main
+	    statrow = [matchrecord, matchwp, spw, spwInplay, rawaces, acerate, rawdoubles, dfrate,
+	               defSeconds, firstin, fwin, swin, swinIn, holdPerc, pointsPerService, pointsLostPerService];
+	    sortdesc = {2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 12: '', 13: '', 14: '', 15: '', 16: ''};
+	    }
+	else if (showstats == 'w') { // returns
+	    statrow = [rpw, rpwInplay, vace, vdef, r1pw, r2pw, 
+	               breakPerc, pointsPerReturn, pointsWonPerReturn, medopp, mnopp];
+	    sortdesc = {2: '', 3: '', 4: '', 6: '', 7: '', 11: '', 8: '', 9: '', 10: ''};           
+	    }
+	else if (showstats == 'l') { // breaks
+	    statrow = [bkconvRate, bpconv, bpchances, bpPerGame, bpPerSet, bpPerMatch, breaksPerSet, breaksPerMatch,
+	               bksavedRate, bpsaved, bpagainst, bpvsPerGame, bpvsPerSet, bpvsPerMatch, brokenPerSet, brokenPerMatch];
+	    sortdesc = {2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: '', 11: '', '12': ''};           
+	    }
+	else if (showstats == 't') { // assorted
+	    statrow = [domratio, npoints, tpw, 
+	               nbreakers, breakerrecord, breakerwp, tbrate, nsets, setrecord, setwp,
+	               ngames, gamesrecord, gameswp, timePerMatch, minutesPerSet, secondsPerPoint];
+	    sortdesc = {2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 12: '', 13: '', 14: '', 9: '', 10: '', 11: '', 15: ''};           
+	    }	    	    	  
+	// if 'avg', then assign to some other variable
+	if (p == 'avg') {
+	    var avgstats = statrow;
+	    continue;
+	    }
+	// add statrow stats to row
+	for (var i = 0; i < statrow.length; i++) {
+	    $mtrow.append($('<td>').text(statrow[i]).attr('align', 'right'));
+            }	
+        $mtbody.append($mtrow);
+        //break;
+        }
+    var $mtfoot = $('<tfoot>');
+    var $mtfooterrow = $('<tr>').attr('id', 'matchfooter').attr('background-color', '#FFF');
+    $mtfooterrow.append($('<td>').text(''));
+    $mtfooterrow.append($('<td>').text('Average'));
+    $mtfooterrow.append($('<td>').text(''));
+    var dontshowavg = {'M W-L': '', 'Aces': '', 'DFs': '', 'BPConv': '', 'BPChnc': '', 'BPSaved': '', 
+                       'BPvs': '', 'Points': '', 'TBs': '', 'TB W-L': '', 'Sets': '', 'Set W-L': '', 
+                       'Gms': '', 'Game W-L': ''};
+    for (var i = 0; i < avgstats.length; i++) {
+        if (hdrs[i+3] in dontshowavg) {$mtfooterrow.append($('<td>').text(''));}
+	else {$mtfooterrow.append($('<td>').text(avgstats[i]).attr('align', 'right'));}
+        }
+    // add average row as footer
+    var blankts = {1: {sorter:false}}
+    for (var i=2; i<20; i++) {
+        if (i in sortdesc) {blankts[i] = {sorter: 'reverse'};}
+        }
+
+    // back to match table
+    if ($mtbody.children().length == 0) {
+        pTable = '<p id="matches">&nbsp;<br/>&nbsp;<br/>Your filters returned no matches. Change a filter or two, or press the '
+        pTable = pTable + '<span class="menureset2 likelink">reset button</span>.</p>'
+        $("#matches").replaceWith(pTable);
+        }
+    else {
+        $matchtable.append($mtbody).attr('id', 'matches').attr('class', 'tablesorter');
+        $mtfoot.append($mtfooterrow);
+        $matchtable.append($mtfoot);
+        $matchtable.attr('border', 0).attr('cellspacing', 0).attr('cellpadding', 4);
+        $("#stats").html($matchtable);
+        $("#matches").tablesorter( {sortList: slist,
+                                    headers: blankts
+                                   });
+
+        }
+    //var currentParams = getFilterParams();
+    if ($('#matchheader').length == 0) {var pparams = defParams;}
+    else {var pparams = getPermalinkParams();}
+    var new_path = 'http://www.tennisabstract.com/cgi-bin/leaders.cgi?f=' + pparams;
+    if (pparams != defParams){
+        history.pushState( {
+            slug: pparams
+            }, null, new_path);
+        }
+    $(".menureset2").click(function () {
+        resetFilters();
+        // close open menus?
+        makeMatchTable({});
+        });
+    }
+
+function makeMenus() {
+    var $str = $('<table>').attr('class', 'menus');
+    // beginning of h2h menu
+    $str.append(
+                $('<tr>').attr('id', 'h2hhead').attr('class', 'header closed') 
+                        .append($('<th>').text(fourspaces + '  ' + 'Head-to-Head')
+                        )
+                )
+    $spanspaces = $('<span>').text(fourspaces + fourspaces);
+    $spaninput = $('<span>').append($('<input>').attr('id', 'h2hsearch').css('width', '80'));
+    $str.append(
+                $('<tr>').attr('id', 'h2hsearchrow').attr('class', 'h2hchoice inmenu') 
+                        .append($('<td>').append($spanspaces).append($spaninput)
+                        )
+                )
+    $str.append(
+                $('<tr>').attr('id', 'h2hdef').attr('class', 'h2hselected h2hchoice selected inmenu menudefault')
+                        .append($('<td>').text(fourspaces + fourspaces + 'All')
+                                         )
+                )
+    // beginning of 'not' menu
+    $str.append(
+                $('<tr>').attr('id', 'nothead').attr('class', 'header closed') 
+                        .append($('<th>').text(fourspaces + '  ' + 'Exclude Opp')
+                        )
+                )
+    $spanspaces = $('<span>').text(fourspaces + fourspaces);
+    $spaninput = $('<span>').append($('<input>').attr('id', 'notsearch').css('width', '80'));
+    $str.append(
+                $('<tr>').attr('id', 'notsearchrow').attr('class', 'notchoice inmenu') 
+                        .append($('<td>').append($spanspaces).append($spaninput)
+                        )
+                )
+    $str.append(
+                $('<tr>').attr('id', 'notdef').attr('class', 'notselected notchoice selected inmenu menudefault')
+                        .append($('<td>').text(fourspaces + fourspaces + 'None')
+                                         )
+                )
+    for (j=0; j<filterlist.length; j++) {
+        var filter = filterlist[j];
+        var ftitle = filteropts[filter][0];
+        var fhead = filter + 'head', fchoice = filter + 'choice', fselected = filter + 'selected';
+        $str.append(
+                    $('<tr>').attr('id', fhead).attr('class', 'header closed') 
+                            .append($('<th>').text(fourspaces + '  ' + ftitle)
+                            )
+                    )
+        $str.append(
+                    $('<tr>').attr('id', filter + 'def').attr('class', fselected + ' ' + fchoice + ' selected inmenu menudefault')
+                            .append($('<td>').text(fourspaces + fourspaces + filteropts[filter][1])
+                                             )
+                    )
+        var flist = filteropts[filter].slice(2);
+        for (i=0; i<flist.length; i++) {
+            var $ent = $('<tr>').attr('class', 'inmenu ' + fchoice)
+                                .append($('<td>').text(fourspaces + fourspaces + flist[i].replace(/ /g, ' '))
+                                                 );
+            if (filter in alphaFilters) {
+                var adjtext = flist[i].replace(/ /g, '_');
+                adjtext = adjtext.replace("'", 'xx');
+                $ent.attr('id', filter+adjtext+'qq');
+                }
+            else {$ent.attr('id', filter + i);}
+            $str.append($ent);
+            }
+        }
+    $str.append($('<tr>').append($('<th>').append($('<span>').attr('class', 'menureset likelink').text('Reset'))))
+    $str.append($('<tr>').append($('<td>').append($('<span>').html('&nbsp;'))))
+    var filternote = '<i>Tip: Ctrl-Click to select multiple choices from the same menu.</i>'
+    $str.append($('<tr>').append($('<td>').append($('<span>').html(filternote))))
+    $('#footer').append($str);
+    }
+
+var alphaFilters = {'country': '', 'tourney': '', 'span': ''};
+//var alphaFilters = {};
+
+function insertBio() {
+    var plname = '<p id="biog"><span style="fontsize:24px"><b>ATP Stat Leaders</b></span>';
+    var desc = '<br/>Compare tour-level main-draw performances of the top fifty ATP players across nearly'
+    desc += ' 60 stats. Use the links at the top right of the table to see more stats, and click the column headers'
+    desc += ' to sort by any category.'
+    desc += '<br/>&nbsp;'
+    desc += '<br/>More leaderboards, updated weekly:'
+    
+    if (players == '1-50') {
+        desc += '<br/><b>Men:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b> <i>Top 50</i> | ';
+        }
+    else {
+        desc += '<br/><b>Men:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b> <a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi">Top 50</a> | ';
+        }
+    if (players == '51-100') {
+        desc += '<i>51-100</i> | ';
+        desc = desc.replace('the top fifty ATP players', 'ATP players ranked 51-100');
+        }
+    else {
+        desc += '<a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi?players=51-100">51-100</a> | ';
+        }
+    if (players == 'chall') {
+        desc += '<i>Challengers</i>';
+        plname = plname.replace('ATP', 'ATP Challenger');
+        desc = desc.replace('the top fifty ATP players', 'top ATP Challenger players');
+        }
+    else {
+        desc += '<a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi?players=challenger">Challengers</a>';
+        }
+    desc += '<br/><b>Women:</b> <a href="https://www.tennisabstract.com/cgi-bin/leaders_wta.cgi">Top 50</a> | ';
+    desc += '<a href="https://www.tennisabstract.com/cgi-bin/leaders_wta.cgi?players=51-100">51-100</a>';
+    $("#bio").html(plname + desc + '</p>');
+    }
+
+function choiceClick(choiceid, filt, ctrl) {
+    //var menudef = 0;
+    // if click is on default -- shift doesn't matter, presets don't matter; select default and deselect others
+    // (possible exception of 'span' menu?
+    if (choiceid.slice(-3) == 'def') {
+        $("." + filt + "choice").removeClass("selected").removeClass(filt + "selected");
+        $('#' + choiceid).addClass("selected").addClass(filt + "selected");
+        }
+    // if click on choice that is already selected [shift doesn't matter]
+    else if ($('#' + choiceid).hasClass('selected')) {
+        // - if it's the only one, go back to default
+        if ($('.' + filt + 'selected').length == 1) {
+            $('#' + filt + 'def').addClass("selected").addClass(filt + "selected");
+            }
+        $('#' + choiceid).removeClass("selected").removeClass(filt + "selected");
+        }
+    // if choice not already selected, and shift, then select new choice
+    else if (ctrl == 1) {
+        $('#' + choiceid).addClass("selected").addClass(filt + "selected");
+        }
+    // choice not already selected, not shift: take away all, make this selection
+    else {
+        $("." + filt + "choice").removeClass("selected").removeClass(filt + "selected");
+        $('#' + choiceid).addClass("selected").addClass(filt + "selected");
+        }
+    makeMatchTable({});
+    }
+
+function setPlayerFilter(player, make) {
+    $('.h2hchoice').removeClass('selected').removeClass('h2hselected');
+    var playerid = '#' + 'h2h' + player.replace(/ /g, '');
+    if ($(playerid).length == 0) { // new player to the list
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
+        $newrow = $('<tr>').attr('class', 'h2hselected h2hchoice selected inmenu').attr('id', playerid.slice(1));
+        $newrow.append($newcell);
+        $('#nothead').before($newrow);
+        if ($('#h2hhead').hasClass('open')) {$newrow.toggle();}
+        $(playerid).click(function () {
+            //var choiceid = $(this).attr('id')
+            if (event.ctrlKey) {var ctrl=1;}
+            else {var ctrl=0;}
+            choiceClick(playerid.slice(1), 'h2h', ctrl);
+            });
+        }
+    else {$(playerid).addClass('selected').addClass('h2hselected');}
+    //set time span to career
+    if (make==1) {makeMatchTable({});}
+    }
+
+function setNotPlayerFilter(player, make) {
+    $('.notchoice').removeClass('selected').removeClass('notselected');
+    var playerid = '#' + 'not' + player.replace(/ /g, '');
+    if ($(playerid).length == 0) { // new player to the list
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
+        $newrow = $('<tr>').attr('class', 'notselected notchoice selected inmenu').attr('id', playerid.slice(1));
+        $newrow.append($newcell);
+        $('#spanhead').before($newrow);
+        if ($('#nothead').hasClass('open')) {$newrow.toggle();}
+        $(playerid).click(function () {
+            //var choiceid = $(this).attr('id')
+            if (event.ctrlKey) {var ctrl=1;}
+            else {var ctrl=0;}
+            choiceClick(playerid.slice(1), 'not', ctrl);
+            });
+        }
+    else {$(playerid).addClass('selected').addClass('notselected');}
+    //set time span to career
+    if (make==1) {makeMatchTable({});}
+    }
+
+function fHeaderClick(choiceid) {
+    var filt = choiceid.slice(0, -4);
+    $("." + filt + "choice").toggle();
+    if ($("#" + filt + "head").hasClass("closed")) {$("#" + filt + "head").removeClass("closed").addClass("open");}
+    else {$("#" + filt + "head").removeClass("open").addClass("closed");}
+    if ($("." + filt + "choice").is(':visible') == false && $("#" + filt + "def").hasClass("selected") == false) {
+        // check if default is selected
+        $("#" + filt + "head").addClass("selected");
+        }
+    else {$("#" + filt + "head").removeClass("selected");}
+    }
+
+var defParams = 's00o1'    
+window.onpopstate = function (event) {
+    if (event.state == null) {
+        var prefs = 0;
+        for (pf in prefilters) {prefs += 1;}
+        if (prefs == 0) {newPrefilters(defParams);}
+        }
+    else if (event.state.slug.indexOf('.cgi') != -1) {
+        newPrefilters(defParams);
+        }
+    else {
+        //alert('event state '+event.state.slug);
+        newPrefilters(event.state.slug);
+        }
+    };
+
+$(document).ready(function() { 
+    history.replaceState( {
+        slug: location.pathname.replace("/", "")
+        }, null, null);
+        
+    if (typeof navbar !== 'undefined') {
+        $("#navbar").html(navbar);
+        } 
+        
+    insertBio();
+    makeMenus();
+    applyPrefilters();
+    $(".stattab").click(function () {
+        $(".stattab").addClass("likelink");
+        $(this).removeClass("likelink");
+        makeMatchTable({});
+        })
+    $(".perma").click(function () {
+        if ($(".perma").text() == 'Hide Permalink') { // generalize this, also add to other toggles that change permalink?
+            $(".perma").html('Table Permalink');
+            $("#permalink").remove();
+            }
+        else {
+            var startwith = 'http://www.tennisabstract.com/cgi-bin/leaders.cgi' + '?f=';
+            startwith += getPermalinkParams();
+            $("#abovestats").prepend('<span id="permalink"><i>' + startwith + '&nbsp;&nbsp;</i></span>');
+            $(".perma").html('Hide Permalink');
+            }
+        })
+    makeMatchTable({});
+    $.getScript("https://www.tennisabstract.com/jquery.ui.core.js", function() {});
+    $.getScript("https://www.tennisabstract.com/jquery.ui.position.js", function() {});
+    $.getScript("https://www.tennisabstract.com/jquery.ui.widget.js", function() {});
+    $.getScript("https://www.tennisabstract.com/jsplayers/mwplayerlist.js", function() {}); // in jsplayers or jsmatches?
+    $.getScript("https://www.tennisabstract.com/jquery.ui.autocomplete.js", function() {});
+    $('#playersearch').append($('<input>').attr('id', 'tags'));
+    $("#h2hhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".h2hchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        if (choiceid != 'h2hsearchrow') {choiceClick(choiceid, 'h2h', ctrl);}
+        });
+    $("#nothead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".notchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        if (choiceid != 'notsearchrow') {choiceClick(choiceid, 'not', ctrl);}
+        });
+    $("#spanhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".spanchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'span', ctrl);
+        });
+    $("#surfacehead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".surfacechoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'surface', ctrl);
+        });
+    $("#levelhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".levelchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'level', ctrl);
+        });
+    $("#tourneyhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".tourneychoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'tourney', ctrl);
+        });
+    $("#roundhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".roundchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'round', ctrl);
+        });
+    $("#entryhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".entrychoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'entry', ctrl);
+        });
+    $("#rankhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".rankchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'rank', ctrl);
+        });
+    $("#oentryhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".oentrychoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'oentry', ctrl);
+        });
+    $("#handhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".handchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'hand', ctrl);
+        });
+    $("#agehead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".agechoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'age', ctrl);
+        });
+    $("#heighthead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".heightchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'height', ctrl);
+        });
+    $("#countryhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".countrychoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'country', ctrl);
+        });
+    $("#resultshead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".resultschoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'results', ctrl);
+        });
+    $("#setshead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".setschoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'sets', ctrl);
+        });
+    $("#asrankhead").click(function () {
+        var choiceid = $(this).attr('id');
+        fHeaderClick(choiceid);
+        });
+    $(".asrankchoice").click(function (event) {
+        if (event.ctrlKey) {var ctrl=1;}
+        else {var ctrl=0;}
+        var choiceid = $(this).attr('id')
+        choiceClick(choiceid, 'asrank', ctrl);
+        });
+    $(".menureset").click(function () {
+        resetFilters();
+        // close open menus?
+        makeMatchTable({});
+        });
+    $(".splittoggle").click(function () {
+        // close years if it's open and splits are opening
+        if ($(".splittoggle").text() == 'show splits' && $(".yeartoggle").text() == 'hide yearly totals') {
+            $(".yearsplits").toggle();
+            $(".yeartoggle").html('<span class="likelink">show yearly totals</span>');
+            }
+        $(".moresplits").toggle();
+        if ($(".splittoggle").text() == 'show splits') {
+            $(".splittoggle").html('<span class="likelink">hide splits</span>');
+            }
+        else {$(".splittoggle").html('<span class="likelink">show splits</span>');}
+        })
+    $(".yeartoggle").click(function () {
+        // close splits if it's open and years are opening
+        if ($(".yeartoggle").text() == 'show yearly totals' && $(".splittoggle").text() == 'hide splits') {
+            $(".moresplits").toggle();
+            $(".splittoggle").html('<span class="likelink">show splits</span>');
+            }
+        if ($(".yearsplits").length == 0) {addYearSplits();}
+        $(".yearsplits").toggle();
+        if ($(".yeartoggle").text() == 'show yearly totals') {
+            $(".yeartoggle").html('<span class="likelink">hide yearly totals</span>');
+            }
+        else {$(".yeartoggle").html('<span class="likelink">show yearly totals</span>');}
+        })
+    var searchbox = "Player Search";		
+    $("#tags").val(searchbox);
+    $("#tags").focus(function() {
+        if ($(this).val() == searchbox) {$(this).val("");}
+        $( "#tags" ).autocomplete({
+                source: playerlist,
+                minLength: 2,
+                select: function(e, ui) {
+                    var playerselect = ui.item.value;
+                    var player = playerselect.slice(4);
+                    var mw = playerselect.slice(1,2);
+                    if (mw == 'M') {
+                        var playerurl = 'https://www.tennisabstract.com/cgi-bin/player.cgi?p=' + player.replace(/ /g, '');
+                        }
+                    else {
+                        var playerurl = 'https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=' + player.replace(/ /g, '');
+                        }                        
+                    window.open(playerurl, "_self");
+                    }
+            });
+        }); 
+    var h2hsearchbox = "Add H2H";		
+    $("#h2hsearch").val(h2hsearchbox);
+    $("#h2hsearch").focus(function() {
+        if ($(this).val() != '') {$(this).val("");}
+        $( "#h2hsearch" ).autocomplete({
+                source: ochoices,
+                minLength: 2,
+                select: function(e, ui) {setPlayerFilter(ui.item.value, 1);}
+            }) 
+        });
+    var notsearchbox = "Add NOT";		
+    $("#notsearch").val(notsearchbox);
+    $("#notsearch").focus(function() {
+        if ($(this).val() != '') {$(this).val("");}
+        $( "#notsearch" ).autocomplete({
+                source: ochoices,
+                minLength: 2,
+                select: function(e, ui) {setNotPlayerFilter(ui.item.value, 1);}
+            }) 
+        });
+    })
+
+</script>
+</head>
+<body>
+
+<div id="header">
+
+<div id="navbar"><table width="100%" style="border-collapse: collapse;">
+<tbody><tr style="background-color: #f5f8f8" ;="">
+<td colspan="3" class="headline">
+<h1 class="siteheader"><span class="blackheader">
+<a href="https://www.tennisabstract.com">&nbsp;tennis<span style="color: blue">abstract</span>.com</a></span></h1></td>
+
+<td colspan="4" style="vertical-align: bottom; margin-bottom: 5px; padding-bottom: 10px;"><span class="blogtext">&nbsp;&nbsp;<i>Latest blog post:</i> <a href="https://www.tennisabstract.com/blog/2024/10/10/coco-gauffs-big-what-if/">Coco Gauff’s Big What-If</a></span></td>
+
+</tr>
+
+<tr>
+<td class="navbar" width="180px">  <div class="dropdown">
+    <button class="dropbtn">Players 
+      <i class="fa fa-caret-down"></i>
+    </button>
+  <div class="dropdown-content dropdown-table">
+    <table>
+      <tbody><tr>
+        <td><span class="dropdown-item">Women:</span></td>
+        <td><span class="dropdown-item">Men:</span></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=IgaSwiatek">Iga Swiatek</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=JannikSinner">Jannik Sinner</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=ArynaSabalenka">Aryna Sabalenka</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=CarlosAlcaraz">Carlos Alcaraz</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=CocoGauff">Coco Gauff</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexanderZverev">Alexander Zverev</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=JessicaPegula">Jessica Pegula</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=NovakDjokovic">Novak Djokovic</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=ElenaRybakina">Elena Rybakina</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=DaniilMedvedev">Daniil Medvedev</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=AshleighBarty">Ashleigh Barty</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=RafaelNadal">Rafael Nadal</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=MargaretCourt">Margaret Court</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=JohnNewcombe">John Newcombe</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/wplayer.cgi?p=GabrielaSabatini">Gabriela Sabatini</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/player.cgi?p=KenRosewall">Ken Rosewall</a></td>
+      </tr>
+    </tbody></table>
+    </div>
+  </div>
+</td>
+
+<td class="navbar" width="180px">  <div class="dropdown">
+    <button class="dropbtn">Rankings 
+      <i class="fa fa-caret-down"></i>
+    </button>
+  <div class="dropdown-content dropdown-table">
+    <table>
+      <tbody><tr>
+        <td><span class="dropdown-item">Women:</span></td>
+        <td><span class="dropdown-item">Men:</span></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/wta_elo_ratings.html">WTA Elo Leaders</a></td>
+        <td><a href="https://tennisabstract.com/reports/atp_elo_ratings.html">ATP Elo Leaders</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/wta_season_yelo_ratings.html">WTA yElo Leaders</a></td>
+        <td><a href="https://tennisabstract.com/reports/atp_season_yelo_ratings.html">ATP yElo Leaders</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/wtaRankings.html">WTA Rankings</a></td>
+        <td><a href="https://tennisabstract.com/reports/atpRankings.html">ATP Rankings</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/rankingsByAgeWta.html">WTA Rankings by Age</a></td>
+        <td><a href="https://tennisabstract.com/reports/rankingsByAge.html">ATP Rankings by Age</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/wta_ranking_milestones.html">WTA Ranking Milestones</a></td>
+        <td><a href="https://tennisabstract.com/reports/atp_ranking_milestones.html">ATP Ranking Milestones</a></td>
+      </tr>
+    </tbody></table>
+    </div>
+  </div>
+</td>
+
+<td class="navbar" width="180px">  <div class="dropdown">
+    <button class="dropbtn">Leaderboards 
+      <i class="fa fa-caret-down"></i>
+    </button>
+  <div class="dropdown-content dropdown-table">
+    <table>
+      <tbody><tr>
+        <td><span class="dropdown-item">Women:</span></td>
+        <td><span class="dropdown-item">Men:</span></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/leaders_wta.cgi">WTA Stats Leaderboard</a></td>
+        <td><a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi">ATP Stats Leaderboard</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/h2hMatrixWta.html">WTA H2H Matrix</a></td>
+        <td><a href="https://tennisabstract.com/reports/h2hMatrix.html">ATP H2H Matrix</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/WTA_BestWhoHavent.html">WTA Best Who Haven't...</a></td>
+        <td><a href="https://tennisabstract.com/reports/ATP_BestWhoHavent.html">ATP Best Who Haven't...</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_serve_women_last52.html">MCP Stats: Serve</a></td>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_serve_men_last52.html">MCP Stats: Serve</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_return_women_last52.html">MCP Stats: Return</a></td>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_return_men_last52.html">MCP Stats: Return</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_rally_women_last52.html">MCP Stats: Rally</a></td>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_rally_men_last52.html">MCP Stats: Rally</a></td>
+      </tr>
+      <tr>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_tactics_women_last52.html">MCP Stats: Tactics</a></td>
+        <td><a href="https://tennisabstract.com/reports/mcp_leaders_tactics_men_last52.html">MCP Stats: Tactics</a></td>
+      </tr>
+    </tbody></table>
+    </div>
+  </div>
+</td>
+
+<td class="navbar" width="180px">  <div class="dropdown">
+    <button class="dropbtn">Blog 
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      <span class="dropdown-item">Latest posts:</span>
+      <a href="https://www.tennisabstract.com/blog/2024/10/10/coco-gauffs-big-what-if/">Coco Gauff’s Big What-If</a>
+      <a href="https://www.tennisabstract.com/blog/2024/04/30/daniil-medvedevs-instinct-for-survival/">Daniil Medvedev’s Instinct For Survival</a>
+      <a href="https://www.tennisabstract.com/blog/2024/04/03/danielle-collins-destroyer-of-second-serves/">Danielle Collins, Destroyer of Second Serves</a>
+      <span class="dropdown-item">More:</span>
+      <a href="https://www.tennisabstract.com/blog/2022/02/01/introducing-the-tennis-128/">The Tennis 128</a>
+      <a href="https://www.tennisabstract.com/blog/2023/03/28/battles-boycotts-and-breakouts-1973-redux/">1973 Redux</a>  
+      <a href="https://tennisabstract.com/blog/">Blog home</a>    
+    </div>
+  </div>
+</td>
+
+<td class="navbar" width="180px">  <div class="dropdown">
+    <button class="dropbtn">Tournaments
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      <a href="https://www.tennisabstract.com/current/2024WTANingbo.html">WTA Ningbo</a>
+      <a href="https://www.tennisabstract.com/current/2024WTAOsaka.html">WTA Osaka</a>
+      <a href="https://www.tennisabstract.com/current/2024ATPAlmaty.html">ATP Almaty</a>
+      <a href="https://www.tennisabstract.com/current/2024ATPAntwerp.html">ATP Antwerp</a>
+      <a href="https://www.tennisabstract.com/current/2024ATPStockholm.html">ATP Stockholm</a>
+      <a href="https://www.tennisabstract.com/current/2024CalgaryChallenger.html">Calgary Challenger</a>
+      <a href="https://www.tennisabstract.com/current/2024CampinasChallenger.html">Campinas Challenger</a>
+      <a href="https://www.tennisabstract.com/current/2024OlbiaChallenger.html">Olbia Challenger</a>
+      <a href="https://www.tennisabstract.com/current/2024Shenzhen(Longhua)Challenger.html">Shenzhen (Longhua) Challenger</a>
+      <a href="https://www.tennisabstract.com/current/2024St.BrieucChallenger.html">St. Brieuc Challenger</a>
+    </div>
+  </div>
+</td>
+
+<td class="navbar" width="160px">  <div class="dropdown">
+    <button class="dropbtn">Charting Project 
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      <a href="https://www.tennisabstract.com/charting/recent.html">Recent Additions</a>
+      <a href="https://www.tennisabstract.com/charting/meta.html">Complete List</a>
+      <a href="https://www.tennisabstract.com/charting/slamfinals.html">Slam Finals</a>
+      <a href="https://www.tennisabstract.com/blog/2015/09/23/the-match-charting-project-quick-start-guide/">Quick Start Guide</a>
+    </div>
+  </div>
+</td>
+
+<td id="playersearch" class="navbar" width="180px">&nbsp;<input id="tags"></td>
+</tr>
+<tr>
+<td colspan="2">&nbsp;</td>
+<td colspan="4">&nbsp;</td>
+<td>&nbsp;</td>
+</tr></tbody></table></div>
+
+<table width="1240px">
+<tbody><tr><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<tr>
+<td id="bio" align="left" style="vertical-align:top"><p id="biog"><span style="fontsize:24px"><b>ATP Stat Leaders</b></span><br>Compare tour-level main-draw performances of the top fifty ATP players across nearly 60 stats. Use the links at the top right of the table to see more stats, and click the column headers to sort by any category.<br>&nbsp;<br>More leaderboards, updated weekly:<br><b>Men:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b> <i>Top 50</i> | <a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi?players=51-100">51-100</a> | <a href="https://www.tennisabstract.com/cgi-bin/leaders.cgi?players=challenger">Challengers</a><br><b>Women:</b> <a href="https://www.tennisabstract.com/cgi-bin/leaders_wta.cgi">Top 50</a> | <a href="https://www.tennisabstract.com/cgi-bin/leaders_wta.cgi?players=51-100">51-100</a></p></td>
+<td id="wonloss" align="right" style="vertical-align:top">&nbsp;</td>
+</tr></tbody></table>
+</div>
+
+<div id="main">
+
+<table width="1280px" id="maintable">
+<tbody><tr id="tabletoggles">
+<td>&nbsp;</td>
+<td id="abovestats" class="abovestats" align="right">
+<b>Stats:</b>&nbsp;
+<span class="statso stattab">Serve</span>&nbsp;|&nbsp;<span class="statsw stattab likelink">Return</span>&nbsp;|&nbsp;<span class="statsl stattab likelink">Breaks</span>&nbsp;|&nbsp;<span class="statst stattab likelink">More</span>
+</td></tr>
+<tr>
+<td id="footer" class="footer">&nbsp;<table class="menus"><tbody><tr id="h2hhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Head-to-Head</th></tr><tr id="h2hsearchrow" class="h2hchoice inmenu" style="display: table-row;"><td><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span><input id="h2hsearch" style="width: 80px;"></span></td></tr><tr id="h2hdef" class="h2hchoice inmenu menudefault selected h2hselected" style="display: table-row;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr id="nothead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Exclude Opp</th></tr><tr id="notsearchrow" class="notchoice inmenu" style="display: table-row;"><td><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span><input id="notsearch" style="width: 80px;"></span></td></tr><tr id="notdef" class="notchoice inmenu menudefault selected notselected" style="display: table-row;"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None</td></tr><tr id="spanhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Time Span</th></tr><tr id="spandef" class="spanselected spanchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Last 52</td></tr><tr class="inmenu spanchoice" id="span2024qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2024</td></tr><tr class="inmenu spanchoice" id="span2023qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2023</td></tr><tr class="inmenu spanchoice" id="span2022qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2022</td></tr><tr id="surfacehead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Surface</th></tr><tr id="surfacedef" class="surfaceselected surfacechoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu surfacechoice" id="surface0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hard</td></tr><tr class="inmenu surfacechoice" id="surface1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clay</td></tr><tr class="inmenu surfacechoice" id="surface2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Grass</td></tr><tr class="inmenu surfacechoice" id="surface3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Carpet</td></tr><tr id="levelhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Level</th></tr><tr id="leveldef" class="levelselected levelchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu levelchoice" id="level0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Grand&nbsp;Slams</td></tr><tr class="inmenu levelchoice" id="level1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Masters</td></tr><tr class="inmenu levelchoice" id="level2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Davis&nbsp;Cup</td></tr><tr id="tourneyhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Event</th></tr><tr id="tourneydef" class="tourneyselected tourneychoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu tourneychoice" id="tourneyDavis_Cupqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Davis&nbsp;Cup</td></tr><tr class="inmenu tourneychoice" id="tourneyOlympicsqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Olympics</td></tr><tr class="inmenu tourneychoice" id="tourneyTour_Finalsqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tour&nbsp;Finals</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Acapulcoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Acapulco</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Adelaideqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Adelaide</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Adelaide_1qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Adelaide&nbsp;1</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Adelaide_2qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Adelaide&nbsp;2</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Antwerpqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Antwerp</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Astanaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Astana</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Atlantaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Atlanta</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Aucklandqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Auckland</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Australian_Openqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Australian&nbsp;Open</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Banja_Lukaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Banja&nbsp;Luka</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Barcelonaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Barcelona</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Baselqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Basel</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Bastadqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Bastad</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Beijingqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Beijing</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Brisbaneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Brisbane</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Bucharestqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Bucharest</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Buenos_Airesqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Buenos&nbsp;Aires</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Canada_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Canada&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Chengduqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Chengdu</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Cincinnati_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Cincinnati&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Cordobaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Cordoba</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Dallasqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Dallas</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Delray_Beachqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Delray&nbsp;Beach</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Dohaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Doha</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Dubaiqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Dubai</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Eastbourneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Eastbourne</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Estorilqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Estoril</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Genevaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Geneva</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Gstaadqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Gstaad</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Halleqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Halle</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Hamburgqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Hamburg</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Hangzhouqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Hangzhou</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Hong_Kongqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Hong&nbsp;Kong</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Houstonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Houston</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Indian_Wells_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Indian&nbsp;Wells&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Kitzbuhelqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Kitzbuhel</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Laver_Cupqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Laver&nbsp;Cup</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Los_Cabosqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Los&nbsp;Cabos</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Lyonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Lyon</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Madrid_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Madrid&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Mallorcaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Mallorca</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Marrakechqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Marrakech</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Marseilleqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Marseille</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Metzqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Metz</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Miami_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Miami&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Monte_Carlo_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Monte&nbsp;Carlo&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Montpellierqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Montpellier</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Munichqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Munich</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Newportqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Newport</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_NextGen_Finalsqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;NextGen&nbsp;Finals</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Paris_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Paris&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Puneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Pune</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Queenxxs_Clubqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Queen's&nbsp;Club</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Rio_De_Janeiroqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Rio&nbsp;De&nbsp;Janeiro</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Roland_Garrosqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Roland&nbsp;Garros</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Rome_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Rome&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Rotterdamqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Rotterdam</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Santiagoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Santiago</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Shanghai_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Shanghai&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Sofiaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Sofia</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Stockholmqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Stockholm</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Stuttgartqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Stuttgart</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Tokyoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Tokyo</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Tour_Finalsqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Tour&nbsp;Finals</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_US_Openqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;US&nbsp;Open</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Umagqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Umag</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_United_Cupqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;United&nbsp;Cup</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Viennaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Vienna</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Washingtonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Washington</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Wimbledonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Wimbledon</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Winston-Salemqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Winston-Salem</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_Zhuhaiqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;Zhuhai</td></tr><tr class="inmenu tourneychoice" id="tourneyATP_s_Hertogenboschqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ATP&nbsp;s&nbsp;Hertogenbosch</td></tr><tr class="inmenu tourneychoice" id="tourneyAcapulcoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Acapulco</td></tr><tr class="inmenu tourneychoice" id="tourneyAdelaide_1qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adelaide&nbsp;1</td></tr><tr class="inmenu tourneychoice" id="tourneyAdelaide_2qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adelaide&nbsp;2</td></tr><tr class="inmenu tourneychoice" id="tourneyAntwerpqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Antwerp</td></tr><tr class="inmenu tourneychoice" id="tourneyAstanaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Astana</td></tr><tr class="inmenu tourneychoice" id="tourneyAtlantaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atlanta</td></tr><tr class="inmenu tourneychoice" id="tourneyAtp_Cupqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atp&nbsp;Cup</td></tr><tr class="inmenu tourneychoice" id="tourneyAustralian_Openqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Australian&nbsp;Open</td></tr><tr class="inmenu tourneychoice" id="tourneyBarcelonaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Barcelona</td></tr><tr class="inmenu tourneychoice" id="tourneyBaselqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Basel</td></tr><tr class="inmenu tourneychoice" id="tourneyBastadqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bastad</td></tr><tr class="inmenu tourneychoice" id="tourneyBelgrade_qq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Belgrade&nbsp;</td></tr><tr class="inmenu tourneychoice" id="tourneyBuenos_Airesqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Buenos&nbsp;Aires</td></tr><tr class="inmenu tourneychoice" id="tourneyCanada_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Canada&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyCincinnati_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cincinnati&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyCordobaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cordoba</td></tr><tr class="inmenu tourneychoice" id="tourneyDallasqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dallas</td></tr><tr class="inmenu tourneychoice" id="tourneyDelray_Beachqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Delray&nbsp;Beach</td></tr><tr class="inmenu tourneychoice" id="tourneyDohaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Doha</td></tr><tr class="inmenu tourneychoice" id="tourneyDubaiqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dubai</td></tr><tr class="inmenu tourneychoice" id="tourneyEastbourneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Eastbourne</td></tr><tr class="inmenu tourneychoice" id="tourneyEstorilqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Estoril</td></tr><tr class="inmenu tourneychoice" id="tourneyFlorenceqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Florence</td></tr><tr class="inmenu tourneychoice" id="tourneyGenevaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Geneva</td></tr><tr class="inmenu tourneychoice" id="tourneyGijonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gijon</td></tr><tr class="inmenu tourneychoice" id="tourneyGstaadqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gstaad</td></tr><tr class="inmenu tourneychoice" id="tourneyHalleqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Halle</td></tr><tr class="inmenu tourneychoice" id="tourneyHamburgqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hamburg</td></tr><tr class="inmenu tourneychoice" id="tourneyHoustonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Houston</td></tr><tr class="inmenu tourneychoice" id="tourneyIndian_Wells_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Indian&nbsp;Wells&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyKitzbuhelqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Kitzbuhel</td></tr><tr class="inmenu tourneychoice" id="tourneyLaver_Cupqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Laver&nbsp;Cup</td></tr><tr class="inmenu tourneychoice" id="tourneyLos_Cabosqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Los&nbsp;Cabos</td></tr><tr class="inmenu tourneychoice" id="tourneyLyonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lyon</td></tr><tr class="inmenu tourneychoice" id="tourneyMadrid_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Madrid&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyMallorcaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mallorca</td></tr><tr class="inmenu tourneychoice" id="tourneyMarrakechqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Marrakech</td></tr><tr class="inmenu tourneychoice" id="tourneyMarseilleqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Marseille</td></tr><tr class="inmenu tourneychoice" id="tourneyMelbourneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Melbourne</td></tr><tr class="inmenu tourneychoice" id="tourneyMetzqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Metz</td></tr><tr class="inmenu tourneychoice" id="tourneyMiami_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Miami&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyMonte_Carlo_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Monte&nbsp;Carlo&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyMontpellierqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Montpellier</td></tr><tr class="inmenu tourneychoice" id="tourneyMunichqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Munich</td></tr><tr class="inmenu tourneychoice" id="tourneyNaplesqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Naples</td></tr><tr class="inmenu tourneychoice" id="tourneyNewportqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Newport</td></tr><tr class="inmenu tourneychoice" id="tourneyNextGen_Finalsqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NextGen&nbsp;Finals</td></tr><tr class="inmenu tourneychoice" id="tourneyParis_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Paris&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyPuneqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pune</td></tr><tr class="inmenu tourneychoice" id="tourneyQueenxxs_Clubqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Queen's&nbsp;Club</td></tr><tr class="inmenu tourneychoice" id="tourneyRio_de_Janeiroqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rio&nbsp;de&nbsp;Janeiro</td></tr><tr class="inmenu tourneychoice" id="tourneyRoland_Garrosqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Roland&nbsp;Garros</td></tr><tr class="inmenu tourneychoice" id="tourneyRome_Mastersqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rome&nbsp;Masters</td></tr><tr class="inmenu tourneychoice" id="tourneyRotterdamqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rotterdam</td></tr><tr class="inmenu tourneychoice" id="tourneySan_Diegoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;San&nbsp;Diego</td></tr><tr class="inmenu tourneychoice" id="tourneySantiagoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Santiago</td></tr><tr class="inmenu tourneychoice" id="tourneySeoulqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Seoul</td></tr><tr class="inmenu tourneychoice" id="tourneySofiaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sofia</td></tr><tr class="inmenu tourneychoice" id="tourneyStockholmqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Stockholm</td></tr><tr class="inmenu tourneychoice" id="tourneyStuttgartqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Stuttgart</td></tr><tr class="inmenu tourneychoice" id="tourneySydneyqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sydney</td></tr><tr class="inmenu tourneychoice" id="tourneyTel_Avivqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tel&nbsp;Aviv</td></tr><tr class="inmenu tourneychoice" id="tourneyTokyoqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tokyo</td></tr><tr class="inmenu tourneychoice" id="tourneyUmagqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Umag</td></tr><tr class="inmenu tourneychoice" id="tourneyUs_Openqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Us&nbsp;Open</td></tr><tr class="inmenu tourneychoice" id="tourneyViennaqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vienna</td></tr><tr class="inmenu tourneychoice" id="tourneyWashingtonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Washington</td></tr><tr class="inmenu tourneychoice" id="tourneyWimbledonqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Wimbledon</td></tr><tr class="inmenu tourneychoice" id="tourneyWinston-Salemqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Winston-Salem</td></tr><tr class="inmenu tourneychoice" id="tourneys_Hertogenboschqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;s&nbsp;Hertogenbosch</td></tr><tr id="roundhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Round</th></tr><tr id="rounddef" class="roundselected roundchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu roundchoice" id="round0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Final</td></tr><tr class="inmenu roundchoice" id="round1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Semis</td></tr><tr class="inmenu roundchoice" id="round2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Quarters</td></tr><tr class="inmenu roundchoice" id="round3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R16</td></tr><tr class="inmenu roundchoice" id="round4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R32</td></tr><tr class="inmenu roundchoice" id="round5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R64</td></tr><tr class="inmenu roundchoice" id="round6"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R128</td></tr><tr id="resultshead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Results</th></tr><tr id="resultsdef" class="resultsselected resultschoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu resultschoice" id="results0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Wins</td></tr><tr class="inmenu resultschoice" id="results1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Losses</td></tr><tr class="inmenu resultschoice" id="results2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;by&nbsp;RET</td></tr><tr class="inmenu resultschoice" id="results3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;L&nbsp;by&nbsp;RET</td></tr><tr class="inmenu resultschoice" id="results4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;by&nbsp;W/O</td></tr><tr class="inmenu resultschoice" id="results5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;L&nbsp;by&nbsp;W/O</td></tr><tr class="inmenu resultschoice" id="results6"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Won&nbsp;1st&nbsp;Set</td></tr><tr class="inmenu resultschoice" id="results7"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lost&nbsp;1st&nbsp;Set</td></tr><tr class="inmenu resultschoice" id="results8"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Won&nbsp;Sets&nbsp;1&amp;2</td></tr><tr class="inmenu resultschoice" id="results9"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lost&nbsp;Sets&nbsp;1&amp;2</td></tr><tr class="inmenu resultschoice" id="results10"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Split&nbsp;1&amp;2</td></tr><tr class="inmenu resultschoice" id="results11"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Up&nbsp;2-1&nbsp;Sets</td></tr><tr class="inmenu resultschoice" id="results12"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Down&nbsp;1-2&nbsp;Sets</td></tr><tr id="setshead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets</th></tr><tr id="setsdef" class="setsselected setschoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu setschoice" id="sets0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Straights</td></tr><tr class="inmenu setschoice" id="sets1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Deciders</td></tr><tr class="inmenu setschoice" id="sets2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;Best&nbsp;of&nbsp;5</td></tr><tr class="inmenu setschoice" id="sets3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3&nbsp;Sets&nbsp;(of&nbsp;5)</td></tr><tr class="inmenu setschoice" id="sets4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4-Setters</td></tr><tr class="inmenu setschoice" id="sets5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5-Setters</td></tr><tr class="inmenu setschoice" id="sets6"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;Best&nbsp;of&nbsp;3</td></tr><tr class="inmenu setschoice" id="sets7"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2-Setters</td></tr><tr class="inmenu setschoice" id="sets8"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3&nbsp;Sets&nbsp;(of&nbsp;3)</td></tr><tr id="asrankhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as Rank</th></tr><tr id="asrankdef" class="asrankselected asrankchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu asrankchoice" id="asrank0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;1</td></tr><tr class="inmenu asrankchoice" id="asrank1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;5</td></tr><tr class="inmenu asrankchoice" id="asrank2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;10</td></tr><tr class="inmenu asrankchoice" id="asrank3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;20</td></tr><tr class="inmenu asrankchoice" id="asrank4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;50</td></tr><tr class="inmenu asrankchoice" id="asrank5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;100</td></tr><tr class="inmenu asrankchoice" id="asrank6"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2+</td></tr><tr class="inmenu asrankchoice" id="asrank7"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6+</td></tr><tr class="inmenu asrankchoice" id="asrank8"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;11+</td></tr><tr class="inmenu asrankchoice" id="asrank9"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;21+</td></tr><tr class="inmenu asrankchoice" id="asrank10"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;51+</td></tr><tr class="inmenu asrankchoice" id="asrank11"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;101+</td></tr><tr id="entryhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as Entry</th></tr><tr id="entrydef" class="entryselected entrychoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu entrychoice" id="entry0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Seeded</td></tr><tr class="inmenu entrychoice" id="entry1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unseeded</td></tr><tr class="inmenu entrychoice" id="entry2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Qualifier</td></tr><tr class="inmenu entrychoice" id="entry3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Wild&nbsp;Card</td></tr><tr id="rankhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Rank</th></tr><tr id="rankdef" class="rankselected rankchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu rankchoice" id="rank0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;5</td></tr><tr class="inmenu rankchoice" id="rank1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;10</td></tr><tr class="inmenu rankchoice" id="rank2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;20</td></tr><tr class="inmenu rankchoice" id="rank3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;50</td></tr><tr class="inmenu rankchoice" id="rank4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top&nbsp;100</td></tr><tr class="inmenu rankchoice" id="rank5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;11+</td></tr><tr class="inmenu rankchoice" id="rank6"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;21+</td></tr><tr class="inmenu rankchoice" id="rank7"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;51+</td></tr><tr class="inmenu rankchoice" id="rank8"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;101+</td></tr><tr class="inmenu rankchoice" id="rank9"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Higher</td></tr><tr class="inmenu rankchoice" id="rank10"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lower</td></tr><tr id="oentryhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Entry</th></tr><tr id="oentrydef" class="oentryselected oentrychoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu oentrychoice" id="oentry0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Seeded</td></tr><tr class="inmenu oentrychoice" id="oentry1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Unseeded</td></tr><tr class="inmenu oentrychoice" id="oentry2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Qualifier</td></tr><tr class="inmenu oentrychoice" id="oentry3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Wild&nbsp;Card</td></tr><tr id="handhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Hand</th></tr><tr id="handdef" class="handselected handchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu handchoice" id="hand0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Right</td></tr><tr class="inmenu handchoice" id="hand1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Left</td></tr><tr class="inmenu handchoice" id="hand2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;One-hand&nbsp;BH</td></tr><tr class="inmenu handchoice" id="hand3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Two-hand&nbsp;BH</td></tr><tr id="agehead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Age</th></tr><tr id="agedef" class="ageselected agechoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu agechoice" id="age0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Younger</td></tr><tr class="inmenu agechoice" id="age1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Older</td></tr><tr class="inmenu agechoice" id="age2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Under&nbsp;21</td></tr><tr class="inmenu agechoice" id="age3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Under&nbsp;23</td></tr><tr class="inmenu agechoice" id="age4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;28&nbsp;&amp;&nbsp;Over</td></tr><tr class="inmenu agechoice" id="age5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;30&nbsp;&amp;&nbsp;Over</td></tr><tr id="heighthead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Height</th></tr><tr id="heightdef" class="heightselected heightchoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu heightchoice" id="height0"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shorter</td></tr><tr class="inmenu heightchoice" id="height1"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Taller</td></tr><tr class="inmenu heightchoice" id="height2"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Under&nbsp;5'10</td></tr><tr class="inmenu heightchoice" id="height3"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Under&nbsp;6'0</td></tr><tr class="inmenu heightchoice" id="height4"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Over&nbsp;6'2</td></tr><tr class="inmenu heightchoice" id="height5"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Over&nbsp;6'4</td></tr><tr id="countryhead" class="header closed"><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vs Country</th></tr><tr id="countrydef" class="countryselected countrychoice selected inmenu menudefault"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All</td></tr><tr class="inmenu countrychoice" id="countryARGqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ARG</td></tr><tr class="inmenu countrychoice" id="countryAUSqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AUS</td></tr><tr class="inmenu countrychoice" id="countryAUTqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AUT</td></tr><tr class="inmenu countrychoice" id="countryBELqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BEL</td></tr><tr class="inmenu countrychoice" id="countryBIHqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BIH</td></tr><tr class="inmenu countrychoice" id="countryBLRqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BLR</td></tr><tr class="inmenu countrychoice" id="countryBOLqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BOL</td></tr><tr class="inmenu countrychoice" id="countryBRAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BRA</td></tr><tr class="inmenu countrychoice" id="countryBULqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BUL</td></tr><tr class="inmenu countrychoice" id="countryCANqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CAN</td></tr><tr class="inmenu countrychoice" id="countryCHIqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHI</td></tr><tr class="inmenu countrychoice" id="countryCHNqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHN</td></tr><tr class="inmenu countrychoice" id="countryCOLqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COL</td></tr><tr class="inmenu countrychoice" id="countryCROqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CRO</td></tr><tr class="inmenu countrychoice" id="countryCZEqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CZE</td></tr><tr class="inmenu countrychoice" id="countryDENqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DEN</td></tr><tr class="inmenu countrychoice" id="countryDOMqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DOM</td></tr><tr class="inmenu countrychoice" id="countryECUqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ECU</td></tr><tr class="inmenu countrychoice" id="countryESPqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ESP</td></tr><tr class="inmenu countrychoice" id="countryESTqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EST</td></tr><tr class="inmenu countrychoice" id="countryFINqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FIN</td></tr><tr class="inmenu countrychoice" id="countryFRAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FRA</td></tr><tr class="inmenu countrychoice" id="countryGBRqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GBR</td></tr><tr class="inmenu countrychoice" id="countryGEOqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GEO</td></tr><tr class="inmenu countrychoice" id="countryGERqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GER</td></tr><tr class="inmenu countrychoice" id="countryGREqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GRE</td></tr><tr class="inmenu countrychoice" id="countryHKGqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HKG</td></tr><tr class="inmenu countrychoice" id="countryHUNqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HUN</td></tr><tr class="inmenu countrychoice" id="countryINDqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IND</td></tr><tr class="inmenu countrychoice" id="countryISRqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ISR</td></tr><tr class="inmenu countrychoice" id="countryITAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ITA</td></tr><tr class="inmenu countrychoice" id="countryJORqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JOR</td></tr><tr class="inmenu countrychoice" id="countryJPNqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPN</td></tr><tr class="inmenu countrychoice" id="countryKAZqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;KAZ</td></tr><tr class="inmenu countrychoice" id="countryKORqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;KOR</td></tr><tr class="inmenu countrychoice" id="countryLATqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LAT</td></tr><tr class="inmenu countrychoice" id="countryLBNqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LBN</td></tr><tr class="inmenu countrychoice" id="countryLIBqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LIB</td></tr><tr class="inmenu countrychoice" id="countryLTUqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LTU</td></tr><tr class="inmenu countrychoice" id="countryMARqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MAR</td></tr><tr class="inmenu countrychoice" id="countryMDAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MDA</td></tr><tr class="inmenu countrychoice" id="countryMEXqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MEX</td></tr><tr class="inmenu countrychoice" id="countryMONqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MON</td></tr><tr class="inmenu countrychoice" id="countryNEDqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NED</td></tr><tr class="inmenu countrychoice" id="countryNORqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NOR</td></tr><tr class="inmenu countrychoice" id="countryPERqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PER</td></tr><tr class="inmenu countrychoice" id="countryPOLqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;POL</td></tr><tr class="inmenu countrychoice" id="countryPORqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;POR</td></tr><tr class="inmenu countrychoice" id="countryROUqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROU</td></tr><tr class="inmenu countrychoice" id="countryRSAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RSA</td></tr><tr class="inmenu countrychoice" id="countryRUSqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RUS</td></tr><tr class="inmenu countrychoice" id="countrySLOqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SLO</td></tr><tr class="inmenu countrychoice" id="countrySRBqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SRB</td></tr><tr class="inmenu countrychoice" id="countrySUIqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUI</td></tr><tr class="inmenu countrychoice" id="countrySVKqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SVK</td></tr><tr class="inmenu countrychoice" id="countrySWEqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SWE</td></tr><tr class="inmenu countrychoice" id="countryTPEqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TPE</td></tr><tr class="inmenu countrychoice" id="countryTUNqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TUN</td></tr><tr class="inmenu countrychoice" id="countryTURqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TUR</td></tr><tr class="inmenu countrychoice" id="countryUKRqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;UKR</td></tr><tr class="inmenu countrychoice" id="countryURUqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;URU</td></tr><tr class="inmenu countrychoice" id="countryUSAqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USA</td></tr><tr class="inmenu countrychoice" id="countryUZBqq"><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;UZB</td></tr><tr><th><span class="menureset likelink">Reset</span></th></tr><tr><td><span>&nbsp;</span></td></tr><tr><td><span><i>Tip: Ctrl-Click to select multiple choices from the same menu.</i></span></td></tr></tbody></table></td>
+<td id="stats" class="stats"><table id="matches" class="tablesorter" border="0" cellspacing="0" cellpadding="4"><thead><tr id="matchheader"><th class="header headerSortDown"><span title="Player's ATP Ranking when the tournament began">Rk</span></th><th><span>Player</span></th><th align="right" class="header"><span title="Total matches">M</span></th><th align="right" class="header"><span title="Match won-loss record">M W-L</span></th><th align="right" class="header"><span title="Match winning percentage">M W%</span></th><th align="right" class="header"><span title="Percentage of service points won">SPW</span></th><th align="right" class="header"><span title="Percentage of service points won
+excluding aces and double faults">SPW-InP</span></th><th align="right" class="header"><span>Aces</span></th><th align="right" class="header"><span title="Ace rate">Ace%</span></th><th align="right" class="header"><span>DFs</span></th><th align="right" class="header"><span title="Double fault rate">DF%</span></th><th align="right" class="header"><span title="Double faults per second serve">DF/2s</span></th><th align="right" class="header"><span title="First serve percentage">1stIn</span></th><th align="right" class="header"><span title="First serve points won">1st%</span></th><th align="right" class="header"><span title="Second serve points won">2nd%</span></th><th align="right" class="header"><span title="Percentage of second serve points won
+excluding double faults">2%-InP</span></th><th align="right" class="header"><span title="Hold rate: Percentage of service games won">Hld%</span></th><th align="right" class="header"><span title="Points played per service game">Pts/SG</span></th><th align="right" class="header"><span title="Points lost per service game">PtsL/SG</span></th></tr></thead><tbody><tr><td>1</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JannikSinner">Jannik Sinner</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JannikSinner&amp;f=">85</a></span></td><td align="right">78-7</td><td align="right">91.8%</td><td align="right">70.8%</td><td align="right">69.6%</td><td align="right">639</td><td align="right">9.6%</td><td align="right">162</td><td align="right">2.4%</td><td align="right">6.4%</td><td align="right">62.2%</td><td align="right">79.0%</td><td align="right">57.3%</td><td align="right">61.2%</td><td align="right">91.3%</td><td align="right">6.0</td><td align="right">1.8</td></tr><tr><td>2</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=CarlosAlcaraz">Carlos Alcaraz</a></span><span> [ESP]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=CarlosAlcaraz&amp;f=">66</a></span></td><td align="right">53-13</td><td align="right">80.3%</td><td align="right">68.0%</td><td align="right">67.9%</td><td align="right">290</td><td align="right">6.0%</td><td align="right">125</td><td align="right">2.6%</td><td align="right">7.6%</td><td align="right">66.0%</td><td align="right">73.4%</td><td align="right">57.6%</td><td align="right">62.4%</td><td align="right">86.5%</td><td align="right">6.1</td><td align="right">1.9</td></tr><tr><td>3</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexanderZverev">Alexander Zverev</a></span><span> [GER]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlexanderZverev&amp;f=">87</a></span></td><td align="right">64-23</td><td align="right">73.6%</td><td align="right">69.7%</td><td align="right">67.9%</td><td align="right">791</td><td align="right">11.1%</td><td align="right">185</td><td align="right">2.6%</td><td align="right">9.2%</td><td align="right">71.8%</td><td align="right">75.8%</td><td align="right">54.1%</td><td align="right">59.5%</td><td align="right">88.8%</td><td align="right">6.1</td><td align="right">1.9</td></tr><tr><td>4</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=NovakDjokovic">Novak Djokovic</a></span><span> [SRB]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=NovakDjokovic&amp;f=">58</a></span></td><td align="right">47-11</td><td align="right">81.0%</td><td align="right">69.1%</td><td align="right">68.2%</td><td align="right">412</td><td align="right">9.0%</td><td align="right">135</td><td align="right">3.0%</td><td align="right">8.2%</td><td align="right">64.1%</td><td align="right">76.1%</td><td align="right">56.6%</td><td align="right">61.6%</td><td align="right">86.9%</td><td align="right">6.0</td><td align="right">1.9</td></tr><tr><td>5</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=DaniilMedvedev">Daniil Medvedev</a></span><span> [RUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=DaniilMedvedev&amp;f=">71</a></span></td><td align="right">51-20</td><td align="right">71.8%</td><td align="right">64.2%</td><td align="right">64.7%</td><td align="right">482</td><td align="right">8.0%</td><td align="right">309</td><td align="right">5.1%</td><td align="right">13.6%</td><td align="right">62.1%</td><td align="right">73.3%</td><td align="right">49.3%</td><td align="right">57.0%</td><td align="right">80.7%</td><td align="right">6.5</td><td align="right">2.3</td></tr><tr><td>6</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=TaylorFritz">Taylor Fritz</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=TaylorFritz&amp;f=">74</a></span></td><td align="right">52-22</td><td align="right">70.3%</td><td align="right">70.2%</td><td align="right">67.3%</td><td align="right">796</td><td align="right">13.5%</td><td align="right">138</td><td align="right">2.3%</td><td align="right">6.3%</td><td align="right">62.7%</td><td align="right">78.4%</td><td align="right">56.3%</td><td align="right">60.1%</td><td align="right">88.7%</td><td align="right">6.0</td><td align="right">1.8</td></tr><tr><td>7</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AndreyRublev">Andrey Rublev</a></span><span> [RUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AndreyRublev&amp;f=">70</a></span></td><td align="right">45-25</td><td align="right">64.3%</td><td align="right">67.3%</td><td align="right">66.0%</td><td align="right">574</td><td align="right">10.0%</td><td align="right">181</td><td align="right">3.2%</td><td align="right">8.3%</td><td align="right">62.1%</td><td align="right">75.9%</td><td align="right">53.3%</td><td align="right">58.2%</td><td align="right">86.5%</td><td align="right">6.3</td><td align="right">2.0</td></tr><tr><td>8</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=CasperRuud">Casper Ruud</a></span><span> [NOR]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=CasperRuud&amp;f=">72</a></span></td><td align="right">50-22</td><td align="right">69.4%</td><td align="right">66.5%</td><td align="right">65.8%</td><td align="right">395</td><td align="right">7.3%</td><td align="right">146</td><td align="right">2.7%</td><td align="right">7.8%</td><td align="right">65.5%</td><td align="right">72.9%</td><td align="right">54.2%</td><td align="right">58.8%</td><td align="right">83.8%</td><td align="right">6.3</td><td align="right">2.1</td></tr><tr><td>9</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexDeMinaur">Alex De Minaur</a></span><span> [AUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlexDeMinaur&amp;f=">64</a></span></td><td align="right">47-17</td><td align="right">73.4%</td><td align="right">64.4%</td><td align="right">64.5%</td><td align="right">289</td><td align="right">6.0%</td><td align="right">167</td><td align="right">3.5%</td><td align="right">7.8%</td><td align="right">55.1%</td><td align="right">71.8%</td><td align="right">55.3%</td><td align="right">59.9%</td><td align="right">80.2%</td><td align="right">6.2</td><td align="right">2.2</td></tr><tr><td>10</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=GrigorDimitrov">Grigor Dimitrov</a></span><span> [BUL]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=GrigorDimitrov&amp;f=">63</a></span></td><td align="right">46-17</td><td align="right">73.0%</td><td align="right">69.7%</td><td align="right">69.6%</td><td align="right">512</td><td align="right">10.3%</td><td align="right">220</td><td align="right">4.4%</td><td align="right">11.5%</td><td align="right">61.6%</td><td align="right">80.0%</td><td align="right">53.1%</td><td align="right">60.1%</td><td align="right">87.8%</td><td align="right">6.0</td><td align="right">1.8</td></tr><tr><td>11</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=StefanosTsitsipas">Stefanos Tsitsipas</a></span><span> [GRE]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=StefanosTsitsipas&amp;f=">71</a></span></td><td align="right">47-24</td><td align="right">66.2%</td><td align="right">67.1%</td><td align="right">66.5%</td><td align="right">475</td><td align="right">8.8%</td><td align="right">188</td><td align="right">3.5%</td><td align="right">9.0%</td><td align="right">61.4%</td><td align="right">74.4%</td><td align="right">55.6%</td><td align="right">61.1%</td><td align="right">86.9%</td><td align="right">6.4</td><td align="right">2.1</td></tr><tr><td>12</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=HubertHurkacz">Hubert Hurkacz</a></span><span> [POL]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=HubertHurkacz&amp;f=">69</a></span></td><td align="right">47-22</td><td align="right">68.1%</td><td align="right">69.3%</td><td align="right">65.2%</td><td align="right">932</td><td align="right">15.5%</td><td align="right">117</td><td align="right">1.9%</td><td align="right">5.3%</td><td align="right">63.1%</td><td align="right">78.3%</td><td align="right">54.0%</td><td align="right">57.0%</td><td align="right">89.1%</td><td align="right">6.2</td><td align="right">1.9</td></tr><tr><td>13</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=TommyPaul">Tommy Paul</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=TommyPaul&amp;f=">65</a></span></td><td align="right">45-20</td><td align="right">69.2%</td><td align="right">65.4%</td><td align="right">64.3%</td><td align="right">373</td><td align="right">7.3%</td><td align="right">115</td><td align="right">2.2%</td><td align="right">5.9%</td><td align="right">61.8%</td><td align="right">71.9%</td><td align="right">54.9%</td><td align="right">58.4%</td><td align="right">82.4%</td><td align="right">6.4</td><td align="right">2.2</td></tr><tr><td>14</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=HolgerRune">Holger Rune</a></span><span> [DEN]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=HolgerRune&amp;f=">70</a></span></td><td align="right">44-26</td><td align="right">62.9%</td><td align="right">65.8%</td><td align="right">65.2%</td><td align="right">469</td><td align="right">8.3%</td><td align="right">199</td><td align="right">3.5%</td><td align="right">8.9%</td><td align="right">60.3%</td><td align="right">73.3%</td><td align="right">54.5%</td><td align="right">59.8%</td><td align="right">83.9%</td><td align="right">6.4</td><td align="right">2.2</td></tr><tr><td>15</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=FrancesTiafoe">Frances Tiafoe</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=FrancesTiafoe&amp;f=">57</a></span></td><td align="right">32-25</td><td align="right">56.1%</td><td align="right">65.5%</td><td align="right">64.2%</td><td align="right">447</td><td align="right">9.2%</td><td align="right">151</td><td align="right">3.1%</td><td align="right">7.5%</td><td align="right">58.6%</td><td align="right">74.2%</td><td align="right">53.1%</td><td align="right">57.4%</td><td align="right">83.7%</td><td align="right">6.5</td><td align="right">2.2</td></tr><tr><td>16</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=UgoHumbert">Ugo Humbert</a></span><span> [FRA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=UgoHumbert&amp;f=">65</a></span></td><td align="right">41-24</td><td align="right">63.1%</td><td align="right">67.4%</td><td align="right">65.9%</td><td align="right">435</td><td align="right">8.4%</td><td align="right">105</td><td align="right">2.0%</td><td align="right">5.6%</td><td align="right">64.0%</td><td align="right">74.2%</td><td align="right">55.3%</td><td align="right">58.6%</td><td align="right">86.2%</td><td align="right">6.2</td><td align="right">2.0</td></tr><tr><td>17</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=BenShelton">Ben Shelton</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=BenShelton&amp;f=">66</a></span></td><td align="right">41-25</td><td align="right">62.1%</td><td align="right">68.4%</td><td align="right">67.6%</td><td align="right">640</td><td align="right">11.0%</td><td align="right">239</td><td align="right">4.1%</td><td align="right">12.7%</td><td align="right">67.9%</td><td align="right">75.4%</td><td align="right">53.6%</td><td align="right">61.4%</td><td align="right">88.2%</td><td align="right">6.3</td><td align="right">2.0</td></tr><tr><td>18</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=LorenzoMusetti">Lorenzo Musetti</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=LorenzoMusetti&amp;f=">67</a></span></td><td align="right">38-29</td><td align="right">56.7%</td><td align="right">64.1%</td><td align="right">63.8%</td><td align="right">247</td><td align="right">4.4%</td><td align="right">113</td><td align="right">2.0%</td><td align="right">5.7%</td><td align="right">64.6%</td><td align="right">70.4%</td><td align="right">52.6%</td><td align="right">55.7%</td><td align="right">79.3%</td><td align="right">6.4</td><td align="right">2.3</td></tr><tr><td>19</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JackDraper">Jack Draper</a></span><span> [GBR]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JackDraper&amp;f=">60</a></span></td><td align="right">36-24</td><td align="right">60.0%</td><td align="right">67.2%</td><td align="right">66.2%</td><td align="right">489</td><td align="right">10.5%</td><td align="right">181</td><td align="right">3.9%</td><td align="right">9.5%</td><td align="right">59.2%</td><td align="right">78.1%</td><td align="right">51.5%</td><td align="right">56.9%</td><td align="right">84.7%</td><td align="right">6.1</td><td align="right">2.0</td></tr><tr><td>20</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=ArthurFils">Arthur Fils</a></span><span> [FRA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=ArthurFils&amp;f=">67</a></span></td><td align="right">39-28</td><td align="right">58.2%</td><td align="right">65.0%</td><td align="right">65.0%</td><td align="right">410</td><td align="right">7.9%</td><td align="right">218</td><td align="right">4.2%</td><td align="right">10.9%</td><td align="right">61.3%</td><td align="right">74.5%</td><td align="right">50.1%</td><td align="right">56.2%</td><td align="right">82.0%</td><td align="right">6.4</td><td align="right">2.2</td></tr><tr><td>21</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=FelixAugerAliassime">Felix Auger Aliassime</a></span><span> [CAN]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=FelixAugerAliassime&amp;f=">63</a></span></td><td align="right">38-25</td><td align="right">60.3%</td><td align="right">66.4%</td><td align="right">66.2%</td><td align="right">508</td><td align="right">11.1%</td><td align="right">246</td><td align="right">5.4%</td><td align="right">14.4%</td><td align="right">62.6%</td><td align="right">75.9%</td><td align="right">50.3%</td><td align="right">58.8%</td><td align="right">83.6%</td><td align="right">6.2</td><td align="right">2.1</td></tr><tr><td>22</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=SebastianKorda">Sebastian Korda</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=SebastianKorda&amp;f=">52</a></span></td><td align="right">31-21</td><td align="right">59.6%</td><td align="right">65.6%</td><td align="right">63.2%</td><td align="right">410</td><td align="right">10.5%</td><td align="right">90</td><td align="right">2.3%</td><td align="right">5.8%</td><td align="right">60.3%</td><td align="right">74.5%</td><td align="right">52.1%</td><td align="right">55.3%</td><td align="right">82.0%</td><td align="right">6.2</td><td align="right">2.1</td></tr><tr><td>23</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlejandroTabilo">Alejandro Tabilo</a></span><span> [CHI]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlejandroTabilo&amp;f=">53</a></span></td><td align="right">29-24</td><td align="right">54.7%</td><td align="right">65.5%</td><td align="right">63.9%</td><td align="right">421</td><td align="right">9.8%</td><td align="right">128</td><td align="right">3.0%</td><td align="right">8.4%</td><td align="right">64.4%</td><td align="right">74.7%</td><td align="right">49.0%</td><td align="right">53.5%</td><td align="right">83.7%</td><td align="right">6.4</td><td align="right">2.2</td></tr><tr><td>24</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexeiPopyrin">Alexei Popyrin</a></span><span> [AUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlexeiPopyrin&amp;f=">53</a></span></td><td align="right">29-24</td><td align="right">54.7%</td><td align="right">66.2%</td><td align="right">64.3%</td><td align="right">530</td><td align="right">12.2%</td><td align="right">166</td><td align="right">3.8%</td><td align="right">10.9%</td><td align="right">64.9%</td><td align="right">75.0%</td><td align="right">49.9%</td><td align="right">56.0%</td><td align="right">84.2%</td><td align="right">6.5</td><td align="right">2.2</td></tr><tr><td>25</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=TomasMachac">Tomas Machac</a></span><span> [CZE]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=TomasMachac&amp;f=">55</a></span></td><td align="right">33-22</td><td align="right">60.0%</td><td align="right">63.3%</td><td align="right">63.2%</td><td align="right">266</td><td align="right">6.0%</td><td align="right">145</td><td align="right">3.3%</td><td align="right">9.1%</td><td align="right">64.0%</td><td align="right">69.2%</td><td align="right">53.0%</td><td align="right">58.3%</td><td align="right">78.8%</td><td align="right">6.4</td><td align="right">2.3</td></tr><tr><td>26</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=KarenKhachanov">Karen Khachanov</a></span><span> [RUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=KarenKhachanov&amp;f=">55</a></span></td><td align="right">31-24</td><td align="right">56.4%</td><td align="right">65.8%</td><td align="right">63.9%</td><td align="right">408</td><td align="right">9.5%</td><td align="right">100</td><td align="right">2.3%</td><td align="right">6.3%</td><td align="right">63.4%</td><td align="right">74.4%</td><td align="right">51.0%</td><td align="right">54.5%</td><td align="right">82.7%</td><td align="right">6.3</td><td align="right">2.1</td></tr><tr><td>27</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=SebastianBaez">Sebastian Baez</a></span><span> [ARG]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=SebastianBaez&amp;f=">60</a></span></td><td align="right">32-28</td><td align="right">53.3%</td><td align="right">60.5%</td><td align="right">60.7%</td><td align="right">142</td><td align="right">3.0%</td><td align="right">113</td><td align="right">2.4%</td><td align="right">8.5%</td><td align="right">72.2%</td><td align="right">63.9%</td><td align="right">51.6%</td><td align="right">56.4%</td><td align="right">74.5%</td><td align="right">6.7</td><td align="right">2.7</td></tr><tr><td>28</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexanderBublik">Alexander Bublik</a></span><span> [KAZ]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlexanderBublik&amp;f=">56</a></span></td><td align="right">30-26</td><td align="right">53.6%</td><td align="right">63.6%</td><td align="right">63.6%</td><td align="right">626</td><td align="right">14.3%</td><td align="right">362</td><td align="right">8.3%</td><td align="right">20.8%</td><td align="right">60.3%</td><td align="right">76.7%</td><td align="right">43.7%</td><td align="right">55.2%</td><td align="right">79.4%</td><td align="right">6.5</td><td align="right">2.4</td></tr><tr><td>29</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JordanThompson">Jordan Thompson</a></span><span> [AUS]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JordanThompson&amp;f=">59</a></span></td><td align="right">33-26</td><td align="right">55.9%</td><td align="right">64.6%</td><td align="right">62.2%</td><td align="right">410</td><td align="right">9.0%</td><td align="right">72</td><td align="right">1.6%</td><td align="right">4.0%</td><td align="right">60.3%</td><td align="right">72.3%</td><td align="right">52.9%</td><td align="right">55.1%</td><td align="right">80.7%</td><td align="right">6.4</td><td align="right">2.3</td></tr><tr><td>30</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=FlavioCobolli">Flavio Cobolli</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=FlavioCobolli&amp;f=">63</a></span></td><td align="right">35-28</td><td align="right">55.6%</td><td align="right">63.0%</td><td align="right">62.8%</td><td align="right">387</td><td align="right">7.2%</td><td align="right">217</td><td align="right">4.0%</td><td align="right">8.9%</td><td align="right">55.0%</td><td align="right">73.2%</td><td align="right">50.4%</td><td align="right">55.3%</td><td align="right">79.7%</td><td align="right">6.5</td><td align="right">2.4</td></tr><tr><td>31</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=FranciscoCerundolo">Francisco Cerundolo</a></span><span> [ARG]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=FranciscoCerundolo&amp;f=">61</a></span></td><td align="right">31-30</td><td align="right">50.8%</td><td align="right">61.5%</td><td align="right">62.4%</td><td align="right">189</td><td align="right">3.7%</td><td align="right">186</td><td align="right">3.7%</td><td align="right">10.6%</td><td align="right">65.4%</td><td align="right">66.8%</td><td align="right">51.5%</td><td align="right">57.6%</td><td align="right">76.2%</td><td align="right">6.7</td><td align="right">2.6</td></tr><tr><td>32</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=NunoBorges">Nuno Borges</a></span><span> [POR]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=NunoBorges&amp;f=">48</a></span></td><td align="right">25-23</td><td align="right">52.1%</td><td align="right">62.9%</td><td align="right">62.4%</td><td align="right">277</td><td align="right">7.2%</td><td align="right">137</td><td align="right">3.5%</td><td align="right">9.5%</td><td align="right">62.8%</td><td align="right">70.7%</td><td align="right">49.6%</td><td align="right">54.8%</td><td align="right">75.8%</td><td align="right">6.5</td><td align="right">2.4</td></tr><tr><td>33</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JiriLehecka">Jiri Lehecka</a></span><span> [CZE]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JiriLehecka&amp;f=">44</a></span></td><td align="right">25-19</td><td align="right">56.8%</td><td align="right">65.7%</td><td align="right">64.1%</td><td align="right">358</td><td align="right">10.6%</td><td align="right">113</td><td align="right">3.4%</td><td align="right">8.8%</td><td align="right">62.0%</td><td align="right">74.1%</td><td align="right">52.1%</td><td align="right">57.2%</td><td align="right">83.3%</td><td align="right">6.3</td><td align="right">2.2</td></tr><tr><td>34</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=NicolasJarry">Nicolas Jarry</a></span><span> [CHI]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=NicolasJarry&amp;f=">42</a></span></td><td align="right">19-23</td><td align="right">45.2%</td><td align="right">65.8%</td><td align="right">63.6%</td><td align="right">375</td><td align="right">10.7%</td><td align="right">94</td><td align="right">2.7%</td><td align="right">7.2%</td><td align="right">62.9%</td><td align="right">74.6%</td><td align="right">50.8%</td><td align="right">54.7%</td><td align="right">82.9%</td><td align="right">6.4</td><td align="right">2.2</td></tr><tr><td>35</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=TomasMartinEtcheverry">Tomas Martin Etcheverry</a></span><span> [ARG]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=TomasMartinEtcheverry&amp;f=">59</a></span></td><td align="right">31-28</td><td align="right">52.5%</td><td align="right">64.3%</td><td align="right">63.0%</td><td align="right">340</td><td align="right">6.9%</td><td align="right">101</td><td align="right">2.0%</td><td align="right">6.1%</td><td align="right">66.2%</td><td align="right">71.2%</td><td align="right">50.7%</td><td align="right">53.9%</td><td align="right">81.6%</td><td align="right">6.5</td><td align="right">2.3</td></tr><tr><td>36</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=MatteoArnaldi">Matteo Arnaldi</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=MatteoArnaldi&amp;f=">55</a></span></td><td align="right">30-25</td><td align="right">54.5%</td><td align="right">61.7%</td><td align="right">60.8%</td><td align="right">398</td><td align="right">8.2%</td><td align="right">185</td><td align="right">3.8%</td><td align="right">8.9%</td><td align="right">56.9%</td><td align="right">70.8%</td><td align="right">49.7%</td><td align="right">54.5%</td><td align="right">77.5%</td><td align="right">6.7</td><td align="right">2.6</td></tr><tr><td>37</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=TallonGriekspoor">Tallon Griekspoor</a></span><span> [NED]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=TallonGriekspoor&amp;f=">62</a></span></td><td align="right">33-29</td><td align="right">53.2%</td><td align="right">66.8%</td><td align="right">66.0%</td><td align="right">533</td><td align="right">10.2%</td><td align="right">212</td><td align="right">4.1%</td><td align="right">11.2%</td><td align="right">63.7%</td><td align="right">74.5%</td><td align="right">53.4%</td><td align="right">60.1%</td><td align="right">84.5%</td><td align="right">6.3</td><td align="right">2.1</td></tr><tr><td>38</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=BrandonNakashima">Brandon Nakashima</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=BrandonNakashima&amp;f=">45</a></span></td><td align="right">26-19</td><td align="right">57.8%</td><td align="right">68.3%</td><td align="right">65.3%</td><td align="right">399</td><td align="right">11.5%</td><td align="right">54</td><td align="right">1.6%</td><td align="right">4.6%</td><td align="right">65.8%</td><td align="right">74.5%</td><td align="right">56.4%</td><td align="right">59.1%</td><td align="right">88.2%</td><td align="right">6.3</td><td align="right">2.0</td></tr><tr><td>39</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=PedroMartinez">Pedro Martinez</a></span><span> [ESP]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=PedroMartinez&amp;f=">36</a></span></td><td align="right">17-19</td><td align="right">47.2%</td><td align="right">59.8%</td><td align="right">62.0%</td><td align="right">75</td><td align="right">2.5%</td><td align="right">151</td><td align="right">5.1%</td><td align="right">16.3%</td><td align="right">69.0%</td><td align="right">65.4%</td><td align="right">47.3%</td><td align="right">56.5%</td><td align="right">72.3%</td><td align="right">6.5</td><td align="right">2.6</td></tr><tr><td>40</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JanLennardStruff">Jan Lennard Struff</a></span><span> [GER]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JanLennardStruff&amp;f=">51</a></span></td><td align="right">30-21</td><td align="right">58.8%</td><td align="right">66.5%</td><td align="right">65.6%</td><td align="right">505</td><td align="right">11.3%</td><td align="right">208</td><td align="right">4.7%</td><td align="right">11.2%</td><td align="right">58.5%</td><td align="right">77.1%</td><td align="right">51.5%</td><td align="right">58.1%</td><td align="right">84.4%</td><td align="right">6.5</td><td align="right">2.2</td></tr><tr><td>41</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=GaelMonfils">Gael Monfils</a></span><span> [FRA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=GaelMonfils&amp;f=">53</a></span></td><td align="right">30-23</td><td align="right">56.6%</td><td align="right">64.8%</td><td align="right">64.1%</td><td align="right">473</td><td align="right">10.8%</td><td align="right">219</td><td align="right">5.0%</td><td align="right">12.7%</td><td align="right">60.5%</td><td align="right">74.2%</td><td align="right">50.3%</td><td align="right">57.7%</td><td align="right">81.6%</td><td align="right">6.3</td><td align="right">2.2</td></tr><tr><td>42</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=MatteoBerrettini">Matteo Berrettini</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=MatteoBerrettini&amp;f=">36</a></span></td><td align="right">27-9</td><td align="right">75.0%</td><td align="right">70.2%</td><td align="right">67.4%</td><td align="right">337</td><td align="right">12.6%</td><td align="right">53</td><td align="right">2.0%</td><td align="right">6.4%</td><td align="right">68.9%</td><td align="right">78.1%</td><td align="right">52.8%</td><td align="right">56.4%</td><td align="right">90.3%</td><td align="right">6.2</td><td align="right">1.8</td></tr><tr><td>43</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=MarianoNavone">Mariano Navone</a></span><span> [ARG]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=MarianoNavone&amp;f=">37</a></span></td><td align="right">17-20</td><td align="right">45.9%</td><td align="right">57.2%</td><td align="right">57.7%</td><td align="right">77</td><td align="right">2.7%</td><td align="right">80</td><td align="right">2.8%</td><td align="right">8.7%</td><td align="right">67.3%</td><td align="right">61.7%</td><td align="right">48.1%</td><td align="right">52.6%</td><td align="right">67.1%</td><td align="right">6.6</td><td align="right">2.8</td></tr><tr><td>44</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=LucianoDarderi">Luciano Darderi</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=LucianoDarderi&amp;f=">45</a></span></td><td align="right">23-22</td><td align="right">51.1%</td><td align="right">62.2%</td><td align="right">61.4%</td><td align="right">260</td><td align="right">7.1%</td><td align="right">116</td><td align="right">3.1%</td><td align="right">7.6%</td><td align="right">58.3%</td><td align="right">70.2%</td><td align="right">50.9%</td><td align="right">55.1%</td><td align="right">77.9%</td><td align="right">6.7</td><td align="right">2.5</td></tr><tr><td>45</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=AlexMichelsen">Alex Michelsen</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=AlexMichelsen&amp;f=">56</a></span></td><td align="right">27-29</td><td align="right">48.2%</td><td align="right">63.2%</td><td align="right">63.1%</td><td align="right">239</td><td align="right">5.4%</td><td align="right">133</td><td align="right">3.0%</td><td align="right">9.4%</td><td align="right">68.0%</td><td align="right">68.6%</td><td align="right">51.7%</td><td align="right">57.0%</td><td align="right">78.5%</td><td align="right">6.5</td><td align="right">2.4</td></tr><tr><td>46</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=ZhizhenZhang">Zhizhen Zhang</a></span><span> [CHN]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=ZhizhenZhang&amp;f=">53</a></span></td><td align="right">26-27</td><td align="right">49.1%</td><td align="right">65.3%</td><td align="right">63.4%</td><td align="right">402</td><td align="right">10.0%</td><td align="right">110</td><td align="right">2.7%</td><td align="right">7.5%</td><td align="right">63.5%</td><td align="right">72.8%</td><td align="right">52.1%</td><td align="right">56.4%</td><td align="right">82.2%</td><td align="right">6.2</td><td align="right">2.2</td></tr><tr><td>47</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=MarcosGiron">Marcos Giron</a></span><span> [USA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=MarcosGiron&amp;f=">52</a></span></td><td align="right">25-27</td><td align="right">48.1%</td><td align="right">64.7%</td><td align="right">63.4%</td><td align="right">261</td><td align="right">6.4%</td><td align="right">72</td><td align="right">1.8%</td><td align="right">4.5%</td><td align="right">60.7%</td><td align="right">73.0%</td><td align="right">51.8%</td><td align="right">54.3%</td><td align="right">81.3%</td><td align="right">6.3</td><td align="right">2.2</td></tr><tr><td>48</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=GiovanniMpetshiPerricard">Giovanni Mpetshi Perricard</a></span><span> [FRA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=GiovanniMpetshiPerricard&amp;f=">23</a></span></td><td align="right">12-11</td><td align="right">52.2%</td><td align="right">68.6%</td><td align="right">65.9%</td><td align="right">405</td><td align="right">19.9%</td><td align="right">127</td><td align="right">6.2%</td><td align="right">18.2%</td><td align="right">65.8%</td><td align="right">78.0%</td><td align="right">50.4%</td><td align="right">61.6%</td><td align="right">85.8%</td><td align="right">6.1</td><td align="right">1.9</td></tr><tr><td>49</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=JunchengShang">Juncheng Shang</a></span><span> [CHN]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=JunchengShang&amp;f=">40</a></span></td><td align="right">25-15</td><td align="right">62.5%</td><td align="right">64.3%</td><td align="right">64.3%</td><td align="right">182</td><td align="right">5.4%</td><td align="right">103</td><td align="right">3.0%</td><td align="right">7.9%</td><td align="right">61.6%</td><td align="right">70.6%</td><td align="right">54.1%</td><td align="right">58.8%</td><td align="right">80.2%</td><td align="right">6.5</td><td align="right">2.3</td></tr><tr><td>50</td><td><span><a href="http://www.tennisabstract.com/cgi-bin/player.cgi?p=LorenzoSonego">Lorenzo Sonego</a></span><span> [ITA]</span></td><td align="right"><span><a href="http://www.tennisabstract.com/cgi-bin/player-classic.cgi?p=LorenzoSonego&amp;f=">50</a></span></td><td align="right">22-28</td><td align="right">44.0%</td><td align="right">66.2%</td><td align="right">65.1%</td><td align="right">322</td><td align="right">8.2%</td><td align="right">102</td><td align="right">2.6%</td><td align="right">7.8%</td><td align="right">66.6%</td><td align="right">73.3%</td><td align="right">52.2%</td><td align="right">56.7%</td><td align="right">83.2%</td><td align="right">6.2</td><td align="right">2.1</td></tr></tbody><tfoot><tr id="matchfooter" background-color="#FFF"><td></td><td>Average</td><td></td><td></td><td align="right">61.2%</td><td align="right">65.8%</td><td align="right">64.8%</td><td></td><td align="right">8.9%</td><td></td><td align="right">3.3%</td><td align="right">8.9%</td><td align="right">63.1%</td><td align="right">73.6%</td><td align="right">52.5%</td><td align="right">57.6%</td><td align="right">83.1%</td><td align="right">6.3</td><td align="right">2.2</td></tr></tfoot></table></td>
+</tr>
+<tr>
+<td id="belowmenus">&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;</td>
+<td id="belowmatches">&nbsp;</td>
+</tr>
+</tbody></table></div>
+
+
+
+
+</body></html>

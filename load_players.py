@@ -11,7 +11,7 @@ from Player_class import Player
 from datetime import datetime
 
 start_time = datetime.now()
-with open('players.pkl', 'rb') as f:
+with open('data/players.pkl', 'rb') as f:
     players = pickle.load(f)
 end_time = datetime.now()
 print('Duration: {}'.format(end_time - start_time))

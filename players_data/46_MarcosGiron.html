@@ -5,7 +5,7 @@
 <script src="https://www.tennisabstract.com/jquery-1.7.1-min.js" type="text/javascript"></script>
 <script src="https://www.tennisabstract.com/jquery.tablesorter.js" type="text/javascript"></script>
 <script src="https://www.tennisabstract.com/navbar.js" type="text/javascript"></script>
-<script src="https://www.minorleaguesplits.com/tennisabstract/cgi-bin/jsplayers/curr_rank_atp.js" type="text/javascript"></script>
+<script src="https://www.tennisabstract.com/jsplayers/curr_rank_atp.js" type="text/javascript"></script>
 <script language="JavaScript">
 var currentTime = new Date();
 var month = currentTime.getMonth() + 1;
@@ -43,28 +43,35 @@ var careerjs = 0;
 var active = 1;
 var lastdate = 0;
 var twitter = 'marcos_giron93';
-var current_dubs = 543;
-var peak_dubs = 199;
-var peakfirst_dubs = 20190701;
-var liverank = 301;
+var current_dubs = '"UNR"';
+var peak_dubs = '"UNR"';
+var peakfirst_dubs = '""';
+var liverank = '';
 var chartagg = 0;
-var photog = '';
-var photog_credit = '';
-var photog_link = '';
+var photog = 'sirobi';
+var photog_credit = 'si.robi';
+var photog_link = 'https://www.flickr.com/photos/sirobi';
 var itf_id = '100132417';
 var atp_id = 'GC88';
 var dc_id = '';
 var wiki_id = 'Marcos_Giron';
+var elo_rating = '1763';
+var elo_rank = '69';
 var ychoices=["Time Span", "Last 52", "Career", "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014", "2013", "2012", "2011", "2010"];
 var tchoices=["Event", "All", "Australian Open", "Olympics", "Roland Garros", "US Open", "Wimbledon", "Acapulco", "Adelaide 1", "Aix En Provence CH", "Antwerp", "Aptos CH", "Astana", "Atlanta", "Auckland", "Barcelona", "Basel", "Beijing", "Bendigo CH", "Binghamton CH", "Bordeaux CH", "Bradenton CH", "Busan CH", "Canada Masters", "Canberra CH", "Carson CH", "Cary CH", "Champaign CH", "Charlottesville CH", "Chengdu", "Chicago CH", "Cincinnati Masters", "Cleveland CH", "Cologne 1", "Columbus CH", "Dallas", "Dallas CH", "Delray Beach", "Eastbourne", "Estoril", "Fairfield CH", "Gatineau CH", "Geneva", "Gijon", "Gimcheon CH", "Gwangju CH", "Halle", "Houston", "Houston CH", "Ilkley CH", "Indian Wells CH", "Indian Wells Masters", "Knoxville CH", "Las Vegas CH", "Lexington CH", "Lisboa CH", "Los Angeles", "Los Cabos", "Madrid Masters", "Mallorca", "Maui CH", "Melbourne", "Memphis", "Metz", "Miami Masters", "Monte Carlo Masters", "Monterrey CH", "Montpellier", "Munich", "Murray River Open", "Napa CH", "New Haven CH", "New York", "Newport", "Newport Beach CH", "Orlando CH", "Paris Masters", "Parma", "Rome Masters", "Rotterdam", "Sacramento CH", "San Diego", "San Francisco CH", "Sarasota CH", "Savannah CH", "Seoul CH", "Shanghai CH", "Shanghai Masters", "Sofia", "Stockton CH", "Stuttgart", "Sydney", "Tallahassee CH", "Tiburon CH", "Tokyo", "Traralgon CH", "Vancouver CH", "Vienna", "Washington", "Winnetka CH", "Winnipeg CH", "Winston-Salem", "s Hertogenbosch"];
 var cchoices=["vs Country", "All", "ARG", "AUS", "AUT", "BAR", "BEL", "BIH", "BLR", "BOL", "BRA", "BUL", "CAN", "CHI", "CHN", "CIV", "COL", "CRO", "CYP", "CZE", "DEN", "ECU", "ESA", "ESP", "FIN", "FRA", "GBR", "GER", "GRE", "HAI", "HUN", "IND", "IRL", "ISR", "ITA", "JPN", "KAZ", "KOR", "LBA", "LTU", "MDA", "MEX", "MON", "NED", "NOR", "NZL", "PHI", "POL", "POR", "RSA", "RUS", "SLO", "SRB", "SUI", "SVK", "SWE", "TPE", "TUN", "UKR", "USA", "UZB", "ZIM"];
 var rchoices=["as Rank", "All", "Top 50", "Top 100", "Top 200", "51+", "101+", "201+"];
-var ochoices=["Sam Barry", "Alejandro Tabilo", "Filip Horansky", "Blaz Rola", "Alexander Zverev", "Jack Draper", "Marton Fucsovics", "Terence Nugent", "Collin Altamirano", "Connor Smith", "Ernesto Escobedo", "Henry Searle", "Olivier Sajous", "Dennis Nevolo", "Matteo Berrettini", "Dayne Kelly", "Viktor Galovic", "Roberto Carballes Baena", "Zach Itzstein", "Fabio Fognini", "Cristian Garin", "Yu Chang", "John Lamble", "Daniel Garza", "Blade Fong", "Lloyd Harris", "Michael Shabaz", "Tennys Sandgren", "Stefanos Tsitsipas", "Jan Satral", "Raymond Sarmiento", "Alex Rybakov", "Carlos Taberner", "Harry Bourchier", "Shane Vinsant", "Rafael Davidian", "Brandon Holt", "Maxime Cressy", "Jeremy Efferding", "Robbie C Bellamy", "Bernardo Saraiva", "Bjorn Fratangelo", "Jason Jung", "David Goffin", "Hugo Gaston", "Louis Wessels", "Tim Smyczek", "Andrea Vavassori", "Radu Albot", "Jarmere Jenkins", "Brian Baker", "Emil Ruusuvuori", "Dominic Thiem", "Ben Shelton", "Francisco Cerundolo", "Carlos Alcaraz", "Luke Saville", "Frank Dancevic", "Joshua Peck", "Andre Dome", "Yasutaka Uchiyama", "Nima Roshan", "Tom Fawcett", "Daniel Nguyen", "Jan Michael Gambill", "Marcel Granollers", "Lorenzo Sonego", "Elliot Benchetrit", "Deiton Baughman", "Arthur De Greef", "Gilad Ben Zvi", "Hans Hach Verdugo", "Miomir Kecmanovic", "Kamil Majchrzak", "Kyle Mcmorrow", "Grigor Dimitrov", "John Isner", "Marek Michalicka", "Finn Tearney", "Ricardas Berankis", "Salvatore Caruso", "Ugo Humbert", "Alexander Ritschard", "Holger Rune", "Marcos Baghdatis", "Jenson Brooksby", "Borna Gojo", "Ilya Ivashka", "Mitchell Krueger", "Austin Krajicek", "Corentin Moutet", "Wil Spencer", "Michail Pervolarakis", "Kevin King", "Marc Polmans", "Luke Bambridge", "Bradley Mousley", "Matija Pecotic", "Philipp Kohlschreiber", "Cameron Norrie", "Botic Van De Zandschulp", "Nicolas Jarry", "Ramkumar Ramanathan", "Rhyne Williams", "Aleksandr Nedovyesov", "Albert Ramos", "Daniel Smethurst", "Filip Peliwo", "Alexander Bublik", "Flavio Cobolli", "Lorenzo Musetti", "Pablo Vivero Gonzalez", "Takuto Niki", "Yosuke Watanuki", "Pablo Andujar", "Markos Kalovelonis", "Sasi Kumar Mukund", "James Duckworth", "Reilly Opelka", "Taylor Fritz", "Andres Molteni", "Dusan Lajovic", "Facundo Bagnis", "Sebastian Korda", "Donald Young", "Artem Sitak", "Corentin Denolly", "Gerardo Lopez Villasenor", "Agustin Velotti", "Yuki Bhambri", "Felipe Mantilla", "Denis Shapovalov", "Ryan Peniston", "Rafael Nadal", "Damon Gooch", "Raheel Manji", "J J Wolf", "Alex Michelsen", "Daniel Elahi Galan", "Borna Coric", "John Patrick Smith", "Alejandro Davidovich Fokina", "Yoshihito Nishioka", "Andrea Collarini", "Christopher Oconnell", "Evan Song", "James Mcgee", "Juan Alejandro Hernandez Serrano", "Eduardo Nava", "Prakash Amritraj", "Soon Woo Kwon", "Edoardo Eremin", "Gael Monfils", "Thomas Fabbiano", "Sebastian Fanselow", "Connor Farren", "Blaz Kavcic", "John Millman", "Mate Pavic", "Zhe Li", "Reid Carleton", "Nicaise Muamba", "Gage Brymer", "Sergiy Stakhovsky", "Aleksandar Kovacevic", "Adrian Mannarino", "Gastao Elias", "Marc Andrea Huesler", "Omar Jasika", "Tomas Martin Etcheverry", "Mathias Bourgue", "Steven Diez", "Peter Polansky", "Illya Marchenko", "Alexander Centenari", "Christopher Eubanks", "Jason Kubler", "Tomas Machac", "Nuno Borges", "Trent Bryde", "Boris Kozlov", "Milos Raonic", "Max Purcell", "Alexei Popyrin", "Jay Clarke", "Robbie Mudge", "Dominik Koepfer", "Ji Sung Nam", "Steve Darcis", "Benjamin Sigouin", "Brydan Klein", "Michael Redlicki", "Andre Goransson", "Jose Rubin Statham", "Frances Tiafoe", "Matthias Bachinger", "Richard Gabb", "Jan Choinski", "Aleksandar Vukic", "Luciano Darderi", "Henry Craig", "Kei Nishikori", "Pierre Hugues Herbert", "Lukas Rosol", "Rigele Te", "Mikael Ymer", "Ben Patael", "Brandon Nakashima", "Masato Shiga", "Xavier Smith", "Oscar Otte", "Mikhail Kukushkin", "Richard Gasquet", "Feliciano Lopez", "Hubert Hurkacz", "Nick Chappell", "Thai Son Kwiatkowski", "Hugo Dellien", "Alex Molcan", "Jeremy Chardy", "Pablo Carreno Busta", "Pedja Krstin", "Matthew Ebden", "Liam Broady", "Arthur Rinderknech", "Nils Langer", "Tim Van Rijthoven", "Federico Coria", "Andy Murray", "Cristobal Rivera", "Pavel Kotov", "Luca Nardi", "Brayden Schnur", "Ruben Bemelmans", "Tommy Paul", "Marco Trungelliti", "Hiroyasu Ehara", "Thanasi Kokkinakis", "Peter Gojowczyk", "Hugo Nys", "Min Hyoek Cho", "Stephane Robert", "Facundo Arguello", "Guido Pella", "Adrian Menendez Maceiras", "Roberto Marcora", "Daniel Kosakowski", "Stefano Travaglia", "Jannik Sinner", "Karue Sell", "Casper Ruud", "Clay Thompson", "Alexios Halebian", "Manuel Sanchez", "Roy Smith", "Michael Grant Gd13", "Calum Puttergill", "Mico Santiago", "Samuel Groth", "Jan Lennard Struff", "Greg Ouellette", "Ante Pavic", "Di Wu", "Mackenzie Mcdonald", "Ruben Gonzales", "Denis Kudla", "Nick Kyrgios", "Nikola Milojevic", "Jaume Munar", "Uladzimir Ignatik", "Jared Hiltzik", "Daniel Evans", "Dennis Novikov", "Michael Mmoh", "Benoit Paire", "Jiri Lehecka", "Alexander Sarkissian", "Fares Ghasya", "Henri Laaksonen", "Federico Delbonis", "Alejandro Gonzalez", "Rajeev Ram", "Tallon Griekspoor", "Gilles Simon", "Gregoire Jacq", "Roberto Bautista Agut", "Gregoire Barrere", "Dominic Stricker", "Yuval Solomon", "Oleg Dmitriev", "Haithem Abid", "Christian Lakoseljac", "Marcelo Arevalo", "Jack Sock", "Jared Donaldson", "Go Soeda", "Dmitry Popko", "Antoine Hoang", "Takanyi Garanganga", "Mousheg Hovhannisyan", "Norbert Gombos", "Mikael Torpegaard", "Sebastian Baez", "Harri Heliovaara", "Stan Wawrinka", "Quentin Halys", "Javier Pulgar Garcia", "Benjamin Lock", "Juan Pablo Ortiz", "Jeff Dadamo", "Darian King", "J T Nishimura", "John Mcnally", "Chris Kwon", "Felix Auger Aliassime", "Juan Martin Del Potro", "Petros Chrysochos", "Damir Dzumhur", "Zhizhen Zhang", "Nicola Kuhn", "Denis Istomin", "Jozef Kovalik", "George Jecminek", "Daniel Altmaier", "Daniil Medvedev", "Roberto Ortega Olmedo", "Emilio Nava", "Jonathan Dasnieres De Veigy", "Emilio Gomez", "Andrey Rublev", "Oscar Fabian Matthews", "Ivo Karlovic", "Laslo Djere", "Alexander Kudryavtsev", "Jorge Alberto Escutia", "Jc Aragone", "Evan King", "Noah Rubin", "Sami Reinwein", "Roman Safiullin", "Dekel Bar", "Or Ram Harel", "Bradley Klahn", "Diego Schwartzman", "Taro Daniel", "Aron Hiltzik", "Nicolas Meister", "Goncalo Oliveira", "Kieran Bertsch", "Patrick Kypson", "Lucas Catarina", "Matt Fawcett", "Marin Cilic", "Hamad Medjedovic", "Daniel Cox", "Kaichi Uchida", "Martin Redlicki", "Gianmarco Ferrari", "Hunter Johnson", "Filip Krajinovic", "Alex Bolt", "Jordan Thompson", "Thiago Monteiro", "Kyle Joshua Dandan", "Rudolf Molleker", "Bernabe Zapata Miralles", "Vasek Pospisil", "Zeke Clark", "Ryota Tanuma", "Filippo Baldi", "Young Seok Kim", "Nicolas Moreno De Alboran", "Alex De Minaur"];
-var tdates=["20100524", "20100621", "20100913", "20100927", "20101122", "20101129", "20110110", "20110117", "20110221", "20110228", "20110725", "20110829", "20110912", "20110919", "20120723", "20120806", "20120910", "20120917", "20120924", "20130311", "20130701", "20130722", "20130909", "20130916", "20130923", "20131007", "20131111", "20140120", "20140306", "20140317", "20140630", "20140714", "20140721", "20140728", "20140804", "20140810", "20140817", "20140825", "20140922", "20140929", "20141006", "20141110", "20141117", "20150112", "20150209", "20150216", "20150316", "20150511", "20150518", "20150622", "20150629", "20150706", "20150720", "20150727", "20150803", "20150831", "20150914", "20150921", "20151005", "20151012", "20151026", "20151102", "20151109", "20151116", "20160919", "20160926", "20161010", "20161017", "20161024", "20161114", "20161121", "20161128", "20170102", "20170109", "20170130", "20170206", "20170220", "20170306", "20170313", "20170320", "20170417", "20170424", "20170501", "20170515", "20170522", "20170529", "20170626", "20170703", "20170710", "20170717", "20170724", "20170731", "20170828", "20170911", "20170918", "20170925", "20171002", "20171016", "20171030", "20171106", "20171113", "20180108", "20180122", "20180129", "20180205", "20180226", "20180305", "20180319", "20180430", "20180507", "20180514", "20180611", "20180618", "20180625", "20180709", "20180723", "20180730", "20180806", "20180813", "20180903", "20180917", "20180924", "20181001", "20181008", "20181029", "20181105", "20181112", "20181231", "20190107", "20190121", "20190128", "20190204", "20190225", "20190304", "20190401", "20190408", "20190415", "20190429", "20190506", "20190513", "20190527", "20190610", "20190617", "20190701", "20190729", "20190805", "20190819", "20190826", "20190902", "20190909", "20190923", "20191014", "20191028", "20191104", "20191111", "20200106", "20200113", "20200120", "20200127", "20200210", "20200224", "20200302", "20200824", "20200831", "20200914", "20200928", "20201012", "20201019", "20201102", "20210201", "20210208", "20210222", "20210301", "20210322", "20210426", "20210503", "20210510", "20210524", "20210531", "20210607", "20210614", "20210628", "20210724", "20210802", "20210809", "20210816", "20210823", "20210830", "20210920", "20210927", "20211004", "20211025", "20211101", "20220103", "20220110", "20220117", "20220207", "20220214", "20220221", "20220307", "20220321", "20220404", "20220411", "20220418", "20220425", "20220502", "20220509", "20220516", "20220523", "20220606", "20220613", "20220620", "20220627", "20220725", "20220801", "20220808", "20220815", "20220829", "20220919", "20221010", "20221017", "20221024", "20221031", "20230102", "20230109", "20230116", "20230206", "20230213", "20230227", "20230306", "20230320", "20230403", "20230417", "20230424", "20230508", "20230522", "20230529", "20230612", "20230619", "20230626", "20230703", "20230731", "20230807", "20230814", "20230821", "20230828", "20230920", "20230925", "20231002", "20231016", "20231023", "20231030", "20231106", "20240108", "20240115", "20240205", "20240212", "20240219", "20240304", "20240318", "20240401", "20240408", "20240422", "20240429", "20240506", "20240520", "20240527", "20240610", "20240617", "20240624", "20240701", "20240715", "20240729", "20240805", "20240812", "20240826", "20240925"];
+var ochoices=["Petros Chrysochos", "Yu Chang", "Christian Lakoseljac", "Rafael Davidian", "Robbie C Bellamy", "Karen Khachanov", "Filippo Baldi", "Bjorn Fratangelo", "Gilles Simon", "Yosuke Watanuki", "Mitchell Krueger", "J T Nishimura", "Min Hyoek Cho", "Michael Mmoh", "Salvatore Caruso", "Gael Monfils", "Jenson Brooksby", "Hiroyasu Ehara", "Kieran Bertsch", "Pedja Krstin", "Alexander Kudryavtsev", "Manuel Sanchez", "Carlos Taberner", "Dennis Novikov", "Liam Broady", "John Patrick Smith", "Karue Sell", "Di Wu", "Marco Trungelliti", "Evan Song", "Jaume Munar", "Nicola Kuhn", "Stephane Robert", "Daniel Garza", "Borna Coric", "Henry Craig", "Matt Fawcett", "Miomir Kecmanovic", "Thai Son Kwiatkowski", "Zach Itzstein", "Lorenzo Sonego", "Joshua Peck", "Benjamin Lock", "Rhyne Williams", "Ilya Ivashka", "Robbie Mudge", "Marcel Granollers", "Vasek Pospisil", "Pavel Kotov", "Cameron Norrie", "Matteo Berrettini", "Mikhail Kukushkin", "Olivier Sajous", "Corentin Moutet", "Juan Alejandro Hernandez Serrano", "Tommy Paul", "Kevin King", "Li Tu", "Denis Istomin", "Jan Choinski", "Alex Michelsen", "Adrian Mannarino", "Trent Bryde", "Calum Puttergill", "Steve Darcis", "Greg Ouellette", "David Goffin", "Gastao Elias", "Raymond Sarmiento", "Rudolf Molleker", "Nuno Borges", "Rafael Nadal", "Jose Rubin Statham", "Nicolas Jarry", "Rigele Te", "Lucas Catarina", "Botic Van De Zandschulp", "Shane Vinsant", "Denis Kudla", "Hugo Nys", "Alexander Sarkissian", "Brayden Schnur", "Samuel Groth", "Mousheg Hovhannisyan", "Marin Cilic", "Luciano Darderi", "Edoardo Eremin", "Aleksandar Vukic", "Bradley Mousley", "Bernabe Zapata Miralles", "Agustin Velotti", "Roberto Bautista Agut", "Michail Pervolarakis", "Ben Patael", "Jared Hiltzik", "J J Wolf", "Zhe Li", "Gerardo Lopez Villasenor", "Marek Michalicka", "Marcelo Arevalo", "Ugo Humbert", "Jeff Dadamo", "Patrick Kypson", "Kyle Joshua Dandan", "Omar Jasika", "Daniel Smethurst", "Alex Rybakov", "Facundo Bagnis", "Yuki Bhambri", "Evan King", "Laslo Djere", "Haithem Abid", "Hubert Hurkacz", "Richard Gabb", "Ruben Bemelmans", "Michael Shabaz", "Daniel Evans", "Borna Gojo", "Nima Roshan", "Eduardo Nava", "Clay Thompson", "Daniel Elahi Galan", "Radu Albot", "Yuval Solomon", "Juan Pablo Ortiz", "Jared Donaldson", "Gage Brymer", "Tim Smyczek", "Ji Sung Nam", "Kei Nishikori", "Dominic Stricker", "Sasi Kumar Mukund", "Roberto Carballes Baena", "Alexei Popyrin", "Taylor Fritz", "Ryan Peniston", "Dominic Thiem", "Darian King", "Denis Shapovalov", "Sergiy Stakhovsky", "Alexander Bublik", "Aron Hiltzik", "Matija Pecotic", "Young Seok Kim", "Nils Langer", "Sam Barry", "Kamil Majchrzak", "Richard Gasquet", "Chris Kwon", "Dusan Lajovic", "Tim Van Rijthoven", "Lorenzo Musetti", "Yasutaka Uchiyama", "Terence Nugent", "Roy Smith", "Thiago Monteiro", "Boris Kozlov", "Michael Grant Gd13", "Connor Farren", "Marc Andrea Huesler", "Alejandro Tabilo", "Oscar Fabian Matthews", "Reilly Opelka", "Ricardas Berankis", "Andre Dome", "Mate Pavic", "Alexander Centenari", "Soon Woo Kwon", "Guido Pella", "Raheel Manji", "Daniel Altmaier", "Oleg Dmitriev", "Alex De Minaur", "Alejandro Davidovich Fokina", "Zeke Clark", "Pablo Carreno Busta", "Jordan Thompson", "Alexios Halebian", "Benoit Paire", "Emilio Gomez", "Andrea Collarini", "Blaz Kavcic", "Diego Schwartzman", "Antoine Hoang", "Uladzimir Ignatik", "Steven Diez", "Yoshihito Nishioka", "Ryota Tanuma", "Finn Tearney", "Hunter Johnson", "Jorge Alberto Escutia", "Dekel Bar", "Jack Sock", "Noah Rubin", "Jason Jung", "Martin Redlicki", "Pierre Hugues Herbert", "Ben Shelton", "Nicolas Meister", "John Lamble", "Elliot Benchetrit", "Alex Bolt", "Zhizhen Zhang", "Holger Rune", "James Mcgee", "Juan Martin Del Potro", "Pablo Andujar", "Max Purcell", "Sebastian Baez", "Jan Satral", "Frances Tiafoe", "Marton Fucsovics", "Albert Ramos", "Jc Aragone", "Oscar Otte", "John Mcnally", "Jeremy Chardy", "Hamad Medjedovic", "Alejandro Gonzalez", "Mackenzie Mcdonald", "Peter Polansky", "Damir Dzumhur", "Takanyi Garanganga", "Collin Altamirano", "Nicaise Muamba", "Hugo Gaston", "Goncalo Oliveira", "Felix Auger Aliassime", "Jason Kubler", "Jan Michael Gambill", "Lloyd Harris", "Filip Peliwo", "Norbert Gombos", "Hugo Dellien", "Frank Dancevic", "Wil Spencer", "Marc Polmans", "Kaichi Uchida", "Adrian Menendez Maceiras", "Harry Bourchier", "Dmitry Popko", "Or Ram Harel", "James Duckworth", "Philipp Kohlschreiber", "Brydan Klein", "Prakash Amritraj", "Lukas Rosol", "Filip Horansky", "Go Soeda", "Luca Nardi", "Gregoire Jacq", "Ruben Gonzales", "Blaz Rola", "Mathias Bourgue", "John Millman", "Deiton Baughman", "Grigor Dimitrov", "Andre Goransson", "Alexander Ritschard", "Nikola Milojevic", "Christopher Eubanks", "Taro Daniel", "Arthur De Greef", "Bradley Klahn", "Andy Murray", "Nick Chappell", "Takuto Niki", "Thanasi Kokkinakis", "Jarmere Jenkins", "Mikael Ymer", "Carlos Alcaraz", "Rajeev Ram", "Hans Hach Verdugo", "Andres Molteni", "Roberto Marcora", "Cristian Garin", "Andrea Vavassori", "Nick Kyrgios", "Dayne Kelly", "Henry Searle", "Dominik Koepfer", "Daniil Medvedev", "Tomas Machac", "Tennys Sandgren", "Roberto Ortega Olmedo", "Tom Fawcett", "Gregoire Barrere", "Facundo Arguello", "Louis Wessels", "John Isner", "Mico Santiago", "Stefanos Tsitsipas", "George Jecminek", "Markos Kalovelonis", "Daniel Cox", "Casper Ruud", "Pablo Vivero Gonzalez", "Tallon Griekspoor", "Peter Gojowczyk", "Connor Smith", "Xavier Smith", "Arthur Rinderknech", "Quentin Halys", "Masato Shiga", "Artem Sitak", "Aleksandar Kovacevic", "Alex Molcan", "Feliciano Lopez", "Austin Krajicek", "Gianmarco Ferrari", "Nicolas Moreno De Alboran", "Brian Baker", "Federico Coria", "Alexander Zverev", "Sami Reinwein", "Javier Pulgar Garcia", "Flavio Cobolli", "Donald Young", "Ramkumar Ramanathan", "Matthew Ebden", "Damon Gooch", "Emil Ruusuvuori", "Jiri Lehecka", "Jay Clarke", "Jack Draper", "Illya Marchenko", "Daniel Kosakowski", "Francisco Cerundolo", "Andrey Rublev", "Stan Wawrinka", "Matthias Bachinger", "Viktor Galovic", "Maxime Cressy", "Thomas Fabbiano", "Luke Saville", "Jozef Kovalik", "Gilad Ben Zvi", "Filip Krajinovic", "Sebastian Fanselow", "Tomas Martin Etcheverry", "Kyle Mcmorrow", "Blade Fong", "Aleksandr Nedovyesov", "Jonathan Dasnieres De Veigy", "Mikael Torpegaard", "Christopher Oconnell", "Reid Carleton", "Henri Laaksonen", "Jan Lennard Struff", "Cristobal Rivera", "Jeremy Efferding", "Bernardo Saraiva", "Marcos Baghdatis", "Milos Raonic", "Harri Heliovaara", "Ivo Karlovic", "Sebastian Korda", "Emilio Nava", "Federico Delbonis", "Benjamin Sigouin", "Dennis Nevolo", "Fabio Fognini", "Corentin Denolly", "Brandon Nakashima", "Daniel Nguyen", "Felipe Mantilla", "Ernesto Escobedo", "Roman Safiullin", "Michael Redlicki", "Jannik Sinner", "Luke Bambridge", "Stefano Travaglia", "Fares Ghasya", "Brandon Holt", "Ante Pavic"];
+var tdates=["20100524", "20100621", "20100913", "20100927", "20101122", "20101129", "20110110", "20110117", "20110221", "20110228", "20110725", "20110829", "20110912", "20110919", "20120723", "20120806", "20120910", "20120917", "20120924", "20130311", "20130701", "20130722", "20130909", "20130916", "20130923", "20131007", "20131111", "20140120", "20140306", "20140317", "20140630", "20140714", "20140721", "20140728", "20140804", "20140810", "20140817", "20140825", "20140922", "20140929", "20141006", "20141110", "20141117", "20150112", "20150209", "20150216", "20150316", "20150511", "20150518", "20150622", "20150629", "20150706", "20150720", "20150727", "20150803", "20150831", "20150914", "20150921", "20151005", "20151012", "20151026", "20151102", "20151109", "20151116", "20160919", "20160926", "20161010", "20161017", "20161024", "20161114", "20161121", "20161128", "20170102", "20170109", "20170130", "20170206", "20170220", "20170306", "20170313", "20170320", "20170417", "20170424", "20170501", "20170515", "20170522", "20170529", "20170626", "20170703", "20170710", "20170717", "20170724", "20170731", "20170828", "20170911", "20170918", "20170925", "20171002", "20171016", "20171030", "20171106", "20171113", "20180108", "20180122", "20180129", "20180205", "20180226", "20180305", "20180319", "20180430", "20180507", "20180514", "20180611", "20180618", "20180625", "20180709", "20180723", "20180730", "20180806", "20180813", "20180903", "20180917", "20180924", "20181001", "20181008", "20181029", "20181105", "20181112", "20181231", "20190107", "20190121", "20190128", "20190204", "20190225", "20190304", "20190401", "20190408", "20190415", "20190429", "20190506", "20190513", "20190527", "20190610", "20190617", "20190701", "20190729", "20190805", "20190819", "20190826", "20190902", "20190909", "20190923", "20191014", "20191028", "20191104", "20191111", "20200106", "20200113", "20200120", "20200127", "20200210", "20200224", "20200302", "20200824", "20200831", "20200914", "20200928", "20201012", "20201019", "20201102", "20210201", "20210208", "20210222", "20210301", "20210322", "20210426", "20210503", "20210510", "20210524", "20210531", "20210607", "20210614", "20210628", "20210724", "20210802", "20210809", "20210816", "20210823", "20210830", "20210920", "20210927", "20211004", "20211025", "20211101", "20220103", "20220110", "20220117", "20220207", "20220214", "20220221", "20220307", "20220321", "20220404", "20220411", "20220418", "20220425", "20220502", "20220509", "20220516", "20220523", "20220606", "20220613", "20220620", "20220627", "20220725", "20220801", "20220808", "20220815", "20220829", "20220919", "20221010", "20221017", "20221024", "20221031", "20230102", "20230109", "20230116", "20230206", "20230213", "20230227", "20230306", "20230320", "20230403", "20230417", "20230424", "20230508", "20230522", "20230529", "20230612", "20230619", "20230626", "20230703", "20230731", "20230807", "20230814", "20230821", "20230828", "20230920", "20230925", "20231002", "20231016", "20231023", "20231030", "20231106", "20240108", "20240115", "20240205", "20240212", "20240219", "20240304", "20240318", "20240401", "20240408", "20240422", "20240429", "20240506", "20240520", "20240527", "20240610", "20240617", "20240624", "20240701", "20240715", "20240729", "20240805", "20240812", "20240826", "20240925", "20241002", "20241014"];
 var vranks=["3", "4", "5", "6", "7", "8", "9", "10", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "86", "87", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99", "101", "102", "103", "104", "105", "106", "107", "108", "110", "111", "113", "114", "116", "117", "118", "119", "120", "121", "122", "123", "125", "128", "130", "138", "139", "141", "143", "144", "145", "148", "149", "150", "154", "155", "156", "157", "160", "161", "162", "163", "165", "168", "169", "171", "173", "175", "176", "177", "186", "188", "191", "192", "193", "195", "196", "197", "198", "200", "202", "203", "208", "209", "210", "211", "212", "214", "215", "216", "218", "219", "220", "222", "225", "227", "231", "232", "240", "245", "246", "247", "250", "253", "255", "257", "259", "262", "263", "265", "266", "267", "269", "271", "272", "274", "275", "278", "282", "283", "284", "285", "286", "288", "289", "290", "291", "292", "300", "303", "308", "311", "312", "314", "316", "319", "320", "321", "322", "323", "324", "327", "328", "330", "331", "334", "335", "336", "337", "340", "342", "347", "349", "350", "353", "357", "365", "367", "368", "375", "376", "378", "382", "386", "389", "390", "391", "393", "398", "402", "403", "405", "410", "412", "415", "426", "427", "429", "437", "441", "444", "449", "451", "452", "454", "460", "465", "466", "471", "473", "477", "482", "483", "484", "487", "493", "495", "501", "512", "513", "514", "515", "518", "524", "525", "527", "528", "534", "535", "539", "542", "561", "568", "588", "592", "599", "601", "603", "605", "606", "619", "621", "625", "631", "634", "650", "656", "670", "676", "680", "681", "686", "692", "694", "706", "713", "726", "729", "748", "751", "752", "753", "758", "760", "763", "769", "772", "773", "784", "787", "800", "813", "819", "827", "837", "842", "850", "854", "860", "869", "870", "874", "881", "886", "894", "897", "903", "910", "917", "928", "998", "1003", "1043", "1103", "1134", "1146", "1156", "1166", "1175", "1225", "1230", "1243", "1274", "1353", "1357", "1400", "1489", "1522", "1532", "1551", "1603", "1646", "1656", "1685", "1774", "1786", "1824", "1905", "1999", "2197", "2202"];
 var playernews=[];
 var upcoming = "";
-var matchmx = [["20240925", "ATP Tokyo", "Hard", "A", "L", "47", "", "", "R32", "6-4 6-7(5) 6-4", "3", "Hubert Hurkacz", "8", "2", "", "R", "19970211", "196", "POL", "0", "125", "4", "1", "93", "56", "42", "21", "16", "3", "6", "17", "3", "89", "56", "46", "21", "16", "2", "3", "2", "", "", "", "2024-0329-391", "", "1", "1", "128034"],
+var matchmx = [["20241014", "ATP Antwerp", "Hard", "A", "U", "47", "8", "", "R16", "", "3", "Arthur Rinderknech", "62", "", "", "R", "19950723", "196", "FRA", "0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "2", "", "", "", "2024-7485-195", "", "2", "2", "126239"],
+          ["20241014", "ATP Antwerp", "Hard", "A", "W", "47", "8", "", "R32", "6-4 6-1", "3", "Botic Van De Zandschulp", "68", "", "", "R", "19951004", "191", "NED", "0", "79", "4", "1", "46", "27", "25", "10", "8", "0", "0", "4", "2", "71", "37", "24", "13", "9", "4", "8", "2", "", "", "", "2024-7485-390", "", "1", "1", "122298"],
+          ["20241002", "Shanghai Masters", "Hard", "M", "L", "47", "", "", "R32", "1-6 6-3 7-5", "3", "David Goffin", "66", "", "", "R", "19901207", "180", "BEL", "0", "131", "8", "2", "91", "53", "41", "15", "14", "6", "9", "4", "1", "97", "65", "46", "14", "14", "5", "8", "2", "", "", "", "2024-5014-340", "", "3", "3", "105676"],
+          ["20241002", "Shanghai Masters", "Hard", "M", "W", "47", "", "", "R64", "6-4 6-3", "3", "Karen Khachanov", "25", "24", "", "R", "19960521", "198", "RUS", "0", "81", "8", "0", "60", "37", "29", "13", "9", "3", "3", "4", "2", "57", "32", "21", "13", "10", "3", "6", "2", "", "", "", "2024-5014-309", "", "2", "2", "111575"],
+          ["20241002", "Shanghai Masters", "Hard", "M", "W", "47", "", "", "R128", "6-1 7-6(4)", "3", "Li Tu", "191", "", "Q", "R", "19960527", "183", "AUS", "0", "87", "1", "1", "53", "36", "25", "9", "9", "1", "3", "4", "2", "73", "45", "29", "9", "10", "6", "11", "1", "", "", "", "2024-5014-277", "", "1", "1", "111454"],
+          ["20240925", "Tokyo", "Hard", "A", "L", "47", "", "", "R32", "6-4 6-7(5) 6-4", "3", "Hubert Hurkacz", "8", "2", "", "R", "19970211", "196", "POL", "0", "125", "4", "1", "93", "56", "42", "21", "16", "3", "6", "17", "3", "89", "56", "46", "21", "16", "2", "3", "2", "20240925-M-Tokyo-R32-Hubert_Hurkacz-Marcos_Giron.html", "", "", "2024-0329-384", "", "1", "1", "128034"],
           ["20240826", "US Open", "Hard", "G", "L", "46", "", "", "R128", "6-3 6-4 5-7 6-4", "5", "Alex De Minaur", "10", "10", "", "R", "19990217", "183", "AUS", "0", "210", "2", "6", "138", "68", "43", "34", "20", "8", "14", "9", "12", "139", "57", "38", "48", "21", "9", "13", "2", "20240827-M-US_Open-R128-Alex_De_Minaur-Marcos_Giron.html", "", "", "2024-560-124", "", "1", "1", "200282"],
           ["20240812", "Cincinnati Masters", "Hard", "M", "L", "45", "", "", "R64", "6-4 5-7 7-6(6)", "3", "Sebastian Baez", "20", "", "", "R", "20001228", "170", "ARG", "0", "155", "8", "2", "105", "54", "39", "29", "17", "7", "10", "1", "6", "111", "73", "53", "17", "17", "4", "7", "2", "", "", "", "2024-0422-267", "", "1", "1", "202104"],
           ["20240805", "Canada Masters", "Hard", "M", "L", "37", "", "", "R64", "6-4 6-1", "3", "James Duckworth", "80", "", "LL", "R", "19920121", "183", "AUS", "0", "73", "5", "2", "63", "32", "21", "11", "8", "8", "12", "3", "5", "49", "23", "19", "15", "9", "0", "1", "2", "", "", "", "2024-0421-244", "", "1", "1", "105902"],
@@ -673,7 +680,7 @@ var matchmx = [["20240925", "ATP Tokyo", "Hard", "A", "L", "47", "", "", "R32", 
           ];
 
 
-var fourspaces = "\u00a0\u00a0\u00a0\u00a0";
+var fourspaces = "    ";
 
 var round_dict = { "R16": 9,
                    "W": 14,
@@ -959,7 +966,7 @@ var filteropts = {'hand': ['vs Hand', 'All', 'Right', 'Left', 'One-hand BH', 'Tw
                   'entry': ['as Entry', 'All', 'Seeded', 'Unseeded', 'Qualifier', 'Wild Card'],
                   'oentry': ['vs Entry', 'All', 'Seeded', 'Unseeded', 'Qualifier', 'Wild Card'],
                   'height': ['vs Height', 'All', 'Shorter', 'Taller', "Under 5'10", "Under 6'0", "Over 6'2", "Over 6'4"],
-                  'results': ['Results', 'All', 'Wins', 'Losses', 'Completed', 'W by RET', 'L by RET', 'W by W/O', 'L by W/O', 'Won 1st Set', 'Lost 1st Set', 'Won Sets 1&2', 'Lost Sets 1&2', 'Split 1&2', 'Up 2-1 Sets', 'Down 1\u20112 Sets'],
+                  'results': ['Results', 'All', 'Wins', 'Losses', 'Completed', 'W by RET', 'L by RET', 'W by W/O', 'L by W/O', 'Won 1st Set', 'Lost 1st Set', 'Won Sets 1&2', 'Lost Sets 1&2', 'Split 1&2', 'Up 2-1 Sets', 'Down 1‑2 Sets'],
                   'scores': ['Scores', 'All', 'All tiebreaks', 'TB won', 'TB lost', 'Deciding TB', 'All 7-5', '7-5 won', '7-5 lost', 'All bagels', '6-0 won', '6-0 lost', 'All 6-1', '6-1 won', '6-1 lost'],
                   'sets': ['Sets', 'All', 'Straights', 'Deciders', 'All Best of 5', '3 Sets (of 5)', '4-Setters', '5-Setters', 'All Best of 3', '2-Setters', '3 Sets (of 3)'],
                   'stats': ['Stats', 'All'],
@@ -1474,7 +1481,7 @@ function filterDict(fid, match, mults) {
             }
         var setswon = wonfirst+wonsecond+wonthird
         if ('Up 2-1 Sets' in mults && setswon == 2) {return 1;}
-        else if ('Down 1\u20112 Sets' in mults && setswon == 1) {return 1;}        
+        else if ('Down 1‑2 Sets' in mults && setswon == 1) {return 1;}        
         return 0;
         }
     else if (fid == 'tourney') {
@@ -1658,8 +1665,8 @@ function unitePartners(multselect) {
             }
         else {
             team = team + multselect[i].slice(1);
-            mults[team.replace(/\u00a0/g, ' ')] = 1;
-            mult_list.push(team.replace(/\u00a0/g, ' '));
+            mults[team.replace(/ /g, ' ')] = 1;
+            mult_list.push(team.replace(/ /g, ' '));
             }
         }  
     return [mults, mult_list];  
@@ -1680,7 +1687,7 @@ function genfilter(fid, first, match, att) {
     else {
         var mults = {};
         // make list into object, for 'in' searching
-        for (var i=0; i<multselect.length; i++) {mults[multselect[i].replace(/\u00a0/g, ' ')] = 1;}  
+        for (var i=0; i<multselect.length; i++) {mults[multselect[i].replace(/ /g, ' ')] = 1;}  
         }
     if ('All' in mults) {return 1;}
     else if (filterDict(fid, match, mults) != 1) {return 0;} // this is where it gets messy
@@ -2295,8 +2302,8 @@ function getPermalinkParams() {
         var oppstring = '';
         var opps = $('.h2hselected').text().split(fourspaces + fourspaces).slice(1);
         for (var i=0; i<opps.length; i++) {
-            //oppstring = oppstring + opps[i].replace('\u00a0', '') + ',';
-            oppstring = oppstring + opps[i].replace(/\u00a0/g, '') + ',';  //.replace(/ /g, '')
+            //oppstring = oppstring + opps[i].replace(' ', '') + ',';
+            oppstring = oppstring + opps[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
             }
         startwith = startwith + '&q=' + oppstring.slice(0,-1);
         }
@@ -2306,8 +2313,8 @@ function getPermalinkParams() {
         var notstring = '';
         var nots = $('.notselected').text().split(fourspaces + fourspaces).slice(1);
         for (var i=0; i<nots.length; i++) {
-            //notstring = notstring + nots[i].replace('\u00a0', '') + ',';
-            notstring = notstring + nots[i].replace(/\u00a0/g, '') + ',';  //.replace(/ /g, '')
+            //notstring = notstring + nots[i].replace(' ', '') + ',';
+            notstring = notstring + nots[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
             }
         startwith = startwith + '&x=' + notstring.slice(0,-1);
         }
@@ -2316,8 +2323,8 @@ function getPermalinkParams() {
         var oppstring = '';
         var opps = $('.partnerselected').text().split(fourspaces + fourspaces).slice(1);
         for (var i=0; i<opps.length; i++) {
-            //oppstring = oppstring + opps[i].replace('\u00a0', '') + ',';
-            oppstring = oppstring + opps[i].replace(/\u00a0/g, '') + ',';  //.replace(/ /g, '')
+            //oppstring = oppstring + opps[i].replace(' ', '') + ',';
+            oppstring = oppstring + opps[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
             }
         startwith = startwith + '&d=' + oppstring.slice(0,-1);
         }
@@ -2326,8 +2333,8 @@ function getPermalinkParams() {
         var oppstring = '';
         var opps = $('.oppselected').text().split(fourspaces + fourspaces).slice(1);
         for (var i=0; i<opps.length; i++) {
-            //oppstring = oppstring + opps[i].replace('\u00a0', '') + ',';
-            oppstring = oppstring + opps[i].replace(/\u00a0/g, '') + ',';  //.replace(/ /g, '')
+            //oppstring = oppstring + opps[i].replace(' ', '') + ',';
+            oppstring = oppstring + opps[i].replace(/ /g, '') + ',';  //.replace(/ /g, '')
             }
         startwith = startwith + '&q=' + oppstring.slice(0,-1);
         }
@@ -2336,12 +2343,12 @@ function getPermalinkParams() {
         var oppstring = '';
         var opps = $('.oppteamselected').text().split(fourspaces + fourspaces).slice(1);
         for (var i=0; i<opps.length; i++) {
-            //oppstring = oppstring + opps[i].replace('\u00a0', '') + ',';
+            //oppstring = oppstring + opps[i].replace(' ', '') + ',';
             if (i % 2 == 0) {
-                oppstring = oppstring + opps[i].replace(/\u00a0/g, ''); 
+                oppstring = oppstring + opps[i].replace(/ /g, ''); 
                 }
             else {
-                oppstring = oppstring + opps[i].replace(/\u00a0/g, '') + ','; 
+                oppstring = oppstring + opps[i].replace(/ /g, '') + ','; 
                 } 
             }
         startwith = startwith + '&t=' + oppstring.slice(0,-1);
@@ -2452,12 +2459,12 @@ function showDate(md) {
     mm = md.slice(4, 6);
     dd = md.slice(6);
     // non-breaking dash: &#8209;
-    var showdate = parseInt(dd,10) + '\u2011' + months[mm] + '\u2011' + yyyy;
+    var showdate = parseInt(dd,10) + '‑' + months[mm] + '‑' + yyyy;
     return showdate;
     }
     
 function getFilterTitle(ftitle) {
-    var eightspaces = '\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0'
+    var eightspaces = '        '
     var opdict = {'ge': '>=', 'le': '<=', 'gt': '>', 'lt': '<', 'eq': '='};
     for (j=0; j<filterlist.length; j++) {
         var filter = filterlist[j];
@@ -2485,7 +2492,7 @@ function getFilterTitle(ftitle) {
                 //add percent sign as necessary?
                 }             
             else {ftitle = ftitle + filteropts[filter][0] + ': ' + $.trim($(fselected).text());}
-            ftitle = ftitle.replace(/\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0/g, ', ')
+            ftitle = ftitle.replace(/        /g, ', ')
             // add comma if more than one fselected?
             }
         }
@@ -2617,8 +2624,8 @@ function renderResults(stdscores, showstats, hdrs, defSort) {
         var $olk = $('<a>').text(match.opp).attr('href', nlink);
         $opplink.append($olk);
         $oppcc.text(' [' + match.ocountry + ']'); 
-        var $onespace = $('<span>').text('\u00a0')
-        var $onespace2 = $('<span>').text('\u00a0')
+        var $onespace = $('<span>').text(' ')
+        var $onespace2 = $('<span>').text(' ')
         if (match.score == '' && (yyyy == '2023' | yyyy == '2024')) {var $deflink = $('<span>').text('vs');}
         else {var $deflink = $('<span>').text('d.');}
         if ($('#h2hdef').hasClass('selected')) {$deflink.attr('class', 'likelink h2hclick');}
@@ -2677,17 +2684,17 @@ function renderResults(stdscores, showstats, hdrs, defSort) {
         if (match.chartlink != "") {
             var clink = 'https://www.tennisabstract.com/charting/' + match.chartlink;
             var $chartlink = $('<a>').text("(ch)").attr('href', clink).attr('target', '_blank').attr('title', "Charting-Based Stats (new window)");
-            var $onespace3 = $('<span>').text('\u00a0');
+            var $onespace3 = $('<span>').text(' ');
             $matchlinks.append($onespace3).append($chartlink);
             }
         if (match.pslink != "") {
-            var $onespace4 = $('<span>').text('\u00a0');
+            var $onespace4 = $('<span>').text(' ');
             var plink = 'https://www.tennisabstract.com/cgi-bin/slamWinProbability.py?m=' + match.pslink;
             var $pslink = $('<a>').text("(wp)").attr('href', plink).attr('target', '_blank').attr('title', "Point-by-Point Data (new window)");
             $matchlinks.append($onespace4).append($pslink);
             }
         //if (match.vidlink != "") {
-        //   var $onespace5 = $('<span>').text('\u00a0');
+        //   var $onespace5 = $('<span>').text(' ');
         //    var $vlink = $('<a>').text("(vid)").attr('href', match.vidlink).attr('target', '_blank').attr('title', "Full Match Video (new window)");
         //    $matchlinks.append($onespace5).append($vlink);
         //    }
@@ -2804,11 +2811,11 @@ function renderResults(stdscores, showstats, hdrs, defSort) {
     else {
         if (opplist.length == 0 && notlist.length == 0) {var rowid = '#f' + currentParams;}
         else if (opplist.length == 0) {
-            var nots = $('.notselected').text().replace(/\u00a0/g, '');
+            var nots = $('.notselected').text().replace(/ /g, '');
             var rowid = '#f' + currentParams + '-' + nots;
             }
         else {
-            var opps = $('.h2hselected').text().replace(/\u00a0/g, '');
+            var opps = $('.h2hselected').text().replace(/ /g, '');
             var rowid = '#f' + currentParams + '-' + opps;
             }
         if ($(rowid).length > 0) {$(rowid).remove();} // if same filter is already present, delete
@@ -3054,8 +3061,8 @@ function renderDoubles(stdscores, showstats, hdrs, defSort) {
         else {
             $oppcc.text(' [' + match.ocountry + '/' + match.o2country + ']'); 
             }
-        var $onespace = $('<span>').text('\u00a0')
-        var $onespace2 = $('<span>').text('\u00a0')
+        var $onespace = $('<span>').text(' ')
+        var $onespace2 = $('<span>').text(' ')
         var $slash = $('<span>').text('/')
         var $slash2 = $('<span>').text('/')
         if (match.score == '' && (yyyy == '2023' | yyyy == '2024')) {var $deflink = $('<span>').text('vs');}
@@ -3211,15 +3218,15 @@ function renderDoubles(stdscores, showstats, hdrs, defSort) {
         var rowid = '#f' + currentParams;
         //if (opplist.length == 0 && oppteamlist.length == 0 && partnerlist.length == 0) {var rowid = '#f' + currentParams;}
         if (opplist.length > 0) {
-            var nots = $('.oppselected').text().replace(/\u00a0/g, '');
+            var nots = $('.oppselected').text().replace(/ /g, '');
             rowid = rowid + '-' + nots;
             }
         if (oppteamlist.length > 0) {
-            var oppteams = $('.oppteamselected').text().replace(/\u00a0/g, '');
+            var oppteams = $('.oppteamselected').text().replace(/ /g, '');
             rowid = rowid + '-' + oppteams;
             }
         if (partnerlist.length > 0) {
-            var partners = $('.partnerselected').text().replace(/\u00a0/g, '');
+            var partners = $('.partnerselected').text().replace(/ /g, '');
             rowid = rowid + '-' + partners;
             }
         if ($(rowid).length > 0) {$(rowid).remove();} // if same filter is already present, delete
@@ -4055,7 +4062,7 @@ function makeMenus() {
     // partner first
     $str.append(
                 $('<tr>').attr('id', 'partnerhead').attr('class', 'header closed') 
-                        .append($('<th>').text(fourspaces + '\u00a0\u00a0' + 'Partner')
+                        .append($('<th>').text(fourspaces + '  ' + 'Partner')
                         )
                 )
     $spanspaces = $('<span>').text(fourspaces + fourspaces);
@@ -4073,7 +4080,7 @@ function makeMenus() {
     // opponent
     $str.append(
                 $('<tr>').attr('id', 'opphead').attr('class', 'header closed') 
-                        .append($('<th>').text(fourspaces + '\u00a0\u00a0' + 'Opponent')
+                        .append($('<th>').text(fourspaces + '  ' + 'Opponent')
                         )
                 )
     $spanspaces = $('<span>').text(fourspaces + fourspaces);
@@ -4091,7 +4098,7 @@ function makeMenus() {
     // opp team 
     $str.append(
                 $('<tr>').attr('id', 'oppteamhead').attr('class', 'header closed') 
-                        .append($('<th>').text(fourspaces + '\u00a0\u00a0' + 'Opp Team')
+                        .append($('<th>').text(fourspaces + '  ' + 'Opp Team')
                         )
                 )
     $spanspaces = $('<span>').text(fourspaces + fourspaces);
@@ -4109,7 +4116,7 @@ function makeMenus() {
     // beginning of h2h menu
     $str.append(
                 $('<tr>').attr('id', 'h2hhead').attr('class', 'header closed') 
-                        .append($('<th>').text(fourspaces + '\u00a0\u00a0' + 'Head-to-Head')
+                        .append($('<th>').text(fourspaces + '  ' + 'Head-to-Head')
                         )
                 )
     $spanspaces = $('<span>').text(fourspaces + fourspaces);
@@ -4127,7 +4134,7 @@ function makeMenus() {
     // beginning of 'not' menu
     $str.append(
                 $('<tr>').attr('id', 'nothead').attr('class', 'header closed') 
-                        .append($('<th>').text(fourspaces + '\u00a0\u00a0' + 'Exclude Opp')
+                        .append($('<th>').text(fourspaces + '  ' + 'Exclude Opp')
                         )
                 )
     $spanspaces = $('<span>').text(fourspaces + fourspaces);
@@ -4148,7 +4155,7 @@ function makeMenus() {
         var fhead = filter + 'head', fchoice = filter + 'choice', fselected = filter + 'selected';
         $str.append(
                     $('<tr>').attr('id', fhead).attr('class', 'header closed') 
-                            .append($('<th>').text(fourspaces + '\u00a0\u00a0' + ftitle)
+                            .append($('<th>').text(fourspaces + '  ' + ftitle)
                             )
                     )
         $str.append(
@@ -4159,7 +4166,7 @@ function makeMenus() {
         var flist = filteropts[filter].slice(2);
         for (i=0; i<flist.length; i++) {
             var $ent = $('<tr>').attr('class', 'inmenu ' + fchoice)
-                                .append($('<td>').text(fourspaces + fourspaces + flist[i].replace(/ /g, '\u00a0'))
+                                .append($('<td>').text(fourspaces + fourspaces + flist[i].replace(/ /g, ' '))
                                                  );
             if (filter in alphaFilters) {
                 var adjtext = flist[i].replace(/ /g, '_');
@@ -4681,6 +4688,24 @@ function makeMenus() {
 var alphaFilters = {'country': '', 'tourney': '', 'span': '', 'rank': ''};
 //var alphaFilters = {};
 
+function calculateAge(dobString) {
+    // Extract the year, month, and day from the dobString (yyyymmdd)
+    let year = parseInt(dobString.substring(0, 4), 10);
+    let month = parseInt(dobString.substring(4, 6), 10) - 1; // Months are 0-indexed in JS Date
+    let day = parseInt(dobString.substring(6, 8), 10);
+    let birthDate = new Date(year, month, day);
+    let today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    let hasHadBirthdayThisYear = (
+        today.getMonth() > birthDate.getMonth() || 
+        (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate())
+    );
+    if (!hasHadBirthdayThisYear) {
+        age--;
+    }
+    return age;
+}
+
 var bhdict = {'1': 'one', '2': 'two'};
 
 function insertPictureBio() {
@@ -4688,7 +4713,9 @@ function insertPictureBio() {
     if (typeof dob === 'undefined') {var birthdate = '';}
     else {
         var bd = dob.toString();
-        var birthdate = 'Date of birth: ' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4);
+        //var birthdate = 'Date of birth: ' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4);
+        var birthdate = 'Age: ' + calculateAge(bd).toString();
+        birthdate = birthdate + ' (' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4) + ')';
         }
 
     var pic_src = 'https://www.tennisabstract.com/photos/' + fullname.toLowerCase().replace(/ /g, "_") + '-' + photog + '.jpg'
@@ -4746,8 +4773,18 @@ function insertPictureBio() {
     //     var drank = "Doubles rank: <b>" + current_dubs.toString() + '</b>&nbsp;|&nbsp;';
     //     drank = drank + 'Peak: <b>' + peak_dubs.toString() + '</b>'
     //     }
-    var drank = "&nbsp;";
-    biotable = biotable + '<tr><td>' + drank + '</td></tr>'; 
+    //var drank = "&nbsp;";
+    //biotable = biotable + '<tr><td>' + drank + '</td></tr>'; 
+    
+    if (typeof elo_rating != 'undefined' && elo_rating != "") {
+        if (window.location.pathname.includes("wplayer")) {
+            var elo_url = "https://tennisabstract.com/reports/wta_elo_ratings.html";
+            }
+        else {var elo_url = "https://tennisabstract.com/reports/atp_elo_ratings.html";}
+        var elo_row = "Elo rank: <b>" + elo_rank + '</b> (<a href="' + elo_url + '">rating: ' + elo_rating + ')</a>';
+        }
+    else {var elo_row = "&nbsp;";}
+    biotable = biotable + '<tr><td>' + elo_row + '</td></tr>'; 
         
     var profiles = '';
     // if (typeof atp_id != 'undefined' && atp_id != "") {
@@ -4790,7 +4827,9 @@ function insertBio() {
     if (typeof dob === 'undefined') {var birthdate = '';}
     else {
         var bd = dob.toString();
-        var birthdate = 'Date of birth: ' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4);
+        //var birthdate = 'Date of birth: ' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4);
+        var birthdate = 'Age: ' + calculateAge(bd).toString();
+        birthdate = birthdate + ' (' + bd.slice(6) + '-' + months[bd.slice(4, 6)] + '-' + bd.slice(0, 4) + ')';
         }
     var handed;
     if (hand == 'R') {handed = 'Plays: Right-handed';}
@@ -4838,12 +4877,22 @@ function insertBio() {
     if (profiles != '') {
         var profile_row = '<tr><td>Profile: ' + profiles.slice(0,-3) + '</td><td>&nbsp;</td></tr>';
         } 
-    else {var profile_row = '';}      
+    else {var profile_row = '';}
+    
+    if (typeof elo_rating != 'undefined' && elo_rating != "") {
+        if (window.location.pathname.includes("wplayer")) {
+            var elo_url = "https://tennisabstract.com/reports/wta_elo_ratings.html";
+            }
+        else {var elo_url = "https://tennisabstract.com/reports/atp_elo_ratings.html";}
+        var elo_row = "Elo rank: <b>" + elo_rank + '</b> (<a href="' + elo_url + '">rating: ' + elo_rating + ')</a>';
+        rowfour = '<tr><td>' + elo_row + '</td><td>&nbsp;</td></tr>';
+        }   
+    else {var rowfour = "";}       
 
     var rhlink = '&nbsp;' // '<a href="https://tennisabstract.herokuapp.com/ATP/RankHistory/' + fullname.replace(/ /g, "_") + '/YearEndDate/Points/">Ranking history and highlights</a>';
     var titlelink = '<span id="titleclick" class="likelink">Titles/Finals</span>'
-    var rowfour =  '<tr><td>' + titlelink + '</td><td>' + rhlink + '</td></tr>'; 
-    $("#bio").html(biotable + rowtwo + rowthree + profile_row + rowfour + '</table></p>');
+    var rowfive =  '<tr><td>' + titlelink + '</td><td>' + rhlink + '</td></tr>'; 
+    $("#bio").html(biotable + rowtwo + rowthree + rowfour + profile_row + rowfive + '</table></p>');
     }
 
 function choiceClick(choiceid, filt, ctrl) {
@@ -4879,7 +4928,7 @@ function setPlayerFilter(player, make, defSort) {
     $('.h2hchoice').removeClass('selected').removeClass('h2hselected');
     var playerid = '#' + 'h2h' + player.replace(/ /g, '');
     if ($(playerid).length == 0) { // new player to the list
-        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, '\u00a0'));
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
         $newrow = $('<tr>').attr('class', 'h2hselected h2hchoice selected inmenu').attr('id', playerid.slice(1));
         $newrow.append($newcell);
         $('#nothead').before($newrow);
@@ -4900,7 +4949,7 @@ function setPartnerFilter(player, make, defSort) {
     $('.partnerchoice').removeClass('selected').removeClass('partnerselected');
     var playerid = '#' + 'partner' + player.replace(/ /g, '');
     if ($(playerid).length == 0) { // new player to the list
-        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, '\u00a0'));
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
         $newrow = $('<tr>').attr('class', 'partnerselected partnerchoice selected inmenu').attr('id', playerid.slice(1));
         $newrow.append($newcell);
         $('#opphead').before($newrow);
@@ -4921,7 +4970,7 @@ function setOpponentFilter(player, make, defSort) {
     $('.oppchoice').removeClass('selected').removeClass('oppselected');
     var playerid = '#' + 'opp' + player.replace(/ /g, '');
     if ($(playerid).length == 0) { // new player to the list
-        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, '\u00a0'));
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
         $newrow = $('<tr>').attr('class', 'oppselected oppchoice selected inmenu').attr('id', playerid.slice(1));
         $newrow.append($newcell);
         $('#oppteamhead').before($newrow);
@@ -4943,7 +4992,7 @@ function setOppteamFilter(player, make, defSort) {
     var playerid = '#' + 'oppteam' + player.replace(/ /g, '');
     if ($(playerid).length == 0) { // new player to the list
         var slash_replace = '/<br/>' + fourspaces + "&nbsp;" + fourspaces
-        $newcell = $('<td>').html(fourspaces + fourspaces + player.replace(/ /g, '\u00a0').replace('/', slash_replace));
+        $newcell = $('<td>').html(fourspaces + fourspaces + player.replace(/ /g, ' ').replace('/', slash_replace));
         $newrow = $('<tr>').attr('class', 'oppteamselected oppteamchoice selected inmenu').attr('id', playerid.slice(1));
         $newrow.append($newcell);
         $('#spanhead').before($newrow);
@@ -4964,7 +5013,7 @@ function setNotPlayerFilter(player, make) {
     $('.notchoice').removeClass('selected').removeClass('notselected');
     var playerid = '#' + 'not' + player.replace(/ /g, '');
     if ($(playerid).length == 0) { // new player to the list
-        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, '\u00a0'));
+        $newcell = $('<td>').text(fourspaces + fourspaces + player.replace(/ /g, ' '));
         $newrow = $('<tr>').attr('class', 'notselected notchoice selected inmenu').attr('id', playerid.slice(1));
         $newrow.append($newcell);
         $('#spanhead').before($newrow);
@@ -5286,7 +5335,7 @@ $(document).ready(function() {
     if (careerjs == 1 && keep_loading == 1) {
         if (view != "doubles" && 'span' in prefilters && (prefilters['span'] != '1' && prefilters['span'] != '2')) {matchmx = matchmx.concat(morematchmx);}  
         else {
-            var careerurl = 'https://www.minorleaguesplits.com/tennisabstract/cgi-bin/jsmatches/' + nameparam + 'Career.js';
+            var careerurl = 'https://www.tennisabstract.com/jsmatches/' + nameparam + 'Career.js';
             $.getScript(careerurl, function() {
                 matchmx = matchmx.concat(morematchmx);
                 })
@@ -5295,7 +5344,7 @@ $(document).ready(function() {
     if (careerjs_dubs == 1 && keep_loading == 1) {
         if (view == "doubles" && 'span' in prefilters && (prefilters['span'] != '1' && prefilters['span'] != '2')) {matchmx_dubs = matchmx_dubs.concat(morematchmx_dubs);}  
         else {
-            var careerurl = 'https://www.minorleaguesplits.com/tennisabstract/cgi-bin/jsdoubles/' + nameparam + 'Career.js';
+            var careerurl = 'https://www.tennisabstract.com/jsdoubles/' + nameparam + 'Career.js';
             $.getScript(careerurl, function() {
                 matchmx_dubs = matchmx_dubs.concat(morematchmx_dubs);
                 })
